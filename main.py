@@ -164,7 +164,7 @@ def main(arguments: Namespace):
         print("")
         print(
             "No cgmerger.conf file found. The script will run with default "
-            "settings. run the command with --write flat to write new cgmerger.conf "
+            "settings. run the command with --write flag to write new cgmerger.conf "
             "file or override the current one. Run the command with --debug flag to "
             "check the current settings"
         )
