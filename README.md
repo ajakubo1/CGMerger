@@ -91,6 +91,9 @@ What comment character is used in your language  -``#`` for python - the default
 
 ## Example/Template project
 
+- ``C#`` sample project: https://github.com/ajakubo1/CGMerger/tree/main/templates/default-csharp
+- ``python`` sample project: https://github.com/ajakubo1/CGMerger/tree/main/templates/default-python
+
 ## Smart usage
 
 I use the script with PyCharm. I define a new file watcher that is pointing to 
