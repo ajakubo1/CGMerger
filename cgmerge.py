@@ -123,7 +123,12 @@ def check_is_in_workdir(file_name: str):
 
 
 def write_to_output_file(
-    file_name, current_file, output_file, exclude_line_regex, disable_headers=False
+    file_name,
+    current_file,
+    output_file,
+    exclude_line_regex,
+    disable_headers=False,
+    ignore_regex=False,
 ):
     if not disable_headers:
         start_file_comment = f'{config["merger"]["comment"]} file "{file_name}" '.ljust(
@@ -132,7 +137,7 @@ def write_to_output_file(
         )
         output_file.write(f"\n{start_file_comment}\n")
     for line in current_file.readlines():
-        if not exclude_line_regex.search(line):
+        if ignore_regex or not exclude_line_regex.search(line):
             output_file.write(line)
     if not disable_headers:
         end_file_comment = (
@@ -237,6 +242,7 @@ def main(arguments: Namespace):
                     output_file,
                     exclude_line_regex,
                     disable_headers=True,
+                    ignore_regex=True,
                 )
 
         for f in files_to_watch:
