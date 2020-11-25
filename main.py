@@ -2,6 +2,42 @@
 import re
 import os
 import configparser
+import argparse
+
+parser = argparse.ArgumentParser(
+    description="Merge contents of folder into one " "output file"
+)
+parser.add_argument(
+    "--output", type=str, help="Output file location", default="program.volatile.py"
+)
+parser.add_argument(
+    "--workdir",
+    type=str,
+    default="program",
+    help="Folder that will be searched for " "files to merge in output file",
+)
+parser.add_argument(
+    "--main",
+    type=str,
+    default="main.py",
+    help="main file in workdir that will be copied the last (main loop should be "
+    "placed in here)",
+)
+parser.add_argument(
+    "--header",
+    type=str,
+    help="File from which the top part of output file will be copied (you should put "
+    "all of the imports/using/includes here depending on your language)",
+)
+parser.add_argument(
+    "--file-regex",
+    type=str,
+    default=".*",
+    help="regex used to filter-out files in workdir",
+)
+args = parser.parse_args()
+
+print(args)
 
 config = configparser.ConfigParser(
     defaults={
@@ -82,6 +118,10 @@ def main():
     main_file = config["merger"]["main"]
     work_dir = config["merger"]["workdir"]
     file_regex = re.compile(config["merger"]["file_regex"])
+    header_file = None
+
+    if "header" in config["merger"]:
+        header_file = config["merger"]["header"]
 
     if "order" in config["merger"]:
         order = config["merger"]["order"].split(",")
@@ -100,6 +140,10 @@ def main():
 
     with open(output_file_location, "w") as output_file:
         # all of the files, which are not in main, are are not in order
+        if header_file is not None:
+            with open(header_file, "r") as current_file:
+                write_to_output_file(header_file, current_file, output_file, work_dir)
+
         for f in files_to_watch:
             if f == main_file:
                 continue
