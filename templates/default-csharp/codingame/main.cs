@@ -5,6 +5,8 @@ using System.Text;
 using System.Collections;
 using System.Collections.Generic;
 
+// Code taken from https://www.codingame.com/ide/puzzle/coders-strike-back for C#
+
 /**
  * Auto-generated code below aims at helping you parse
  * the standard input according to the problem statement.
