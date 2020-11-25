@@ -2,12 +2,9 @@
 import re
 import os
 import configparser
-import argparse
-from argparse import Namespace
+from argparse import Namespace, ArgumentParser
 
-parser = argparse.ArgumentParser(
-    description="Merge contents of folder into one " "output file"
-)
+parser = ArgumentParser(description="Merge contents of folder into one " "output file")
 parser.add_argument(
     "--output", type=str, help="Output file location", default="program.volatile.py"
 )
@@ -53,28 +50,28 @@ def in_workdir(file_name: str):
 
 def check_output_exists():
     if not os.path.exists(config["merger"]["output"]):
-        raise Exception(
+        parser.error(
             f"No \"{config['merger']['output']}\" file present in {os.getcwd()}"
         )
 
 
 def check_header_exists():
     if not os.path.exists(config["merger"]["header"]):
-        raise Exception(
+        parser.error(
             f"No \"{config['merger']['header']}\" file present in {os.getcwd()}"
         )
 
 
 def check_workdir_exists():
     if not os.path.isdir(config["merger"]["workdir"]):
-        raise Exception(
+        parser.error(
             f"No \"{config['merger']['workdir']}\" directory present in {os.getcwd()}"
         )
 
 
 def check_is_in_workdir(file_name: str):
     if not in_workdir(file_name):
-        raise Exception(
+        parser.error(
             f'No "{file_name}" directory present in {os.getcwd()}'
             f'/{config["merger"]["workdir"]}',
         )
@@ -134,17 +131,9 @@ def main(arguments: Namespace):
             config.write(config_file)
         return
 
-    try:
-        check_output_exists()
-    except Exception as e:
-        print(e)
-        return
+    check_output_exists()
 
-    try:
-        check_workdir_exists()
-    except Exception as e:
-        print(e)
-        return
+    check_workdir_exists()
 
     order = None
     output_file_location = config["merger"]["output"]
@@ -161,18 +150,10 @@ def main(arguments: Namespace):
 
     if order is not None:
         for file_name in order:
-            try:
-                check_is_in_workdir(file_name)
-            except Exception as e:
-                print(e)
-                return
+            check_is_in_workdir(file_name)
 
     if header_file is not None:
-        try:
-            check_header_exists()
-        except Exception as e:
-            print(e)
-            return
+        check_header_exists()
 
     files_to_watch = [
         f for f in os.listdir(work_dir) if os.path.isfile(os.path.join(work_dir, f))
