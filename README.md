@@ -9,7 +9,7 @@ Currently, the only option of using the script is just by doing a git clone or
 
 ## Running the script
 
-The script can be run from the console by simply typing ``python3 main.py`` command.
+The script can be run from the console by simply typing ``python3 cgmerge.py`` command.
 
 ## Usage
 
@@ -34,7 +34,7 @@ You can write your own config file for the script. In the begining of the run, t
   in command line.
   
 Instead of writing your own ``cgmerger.conf``, you can simply run the script with
- ``python3 main.py --write``. This will create a ``cgmerger.conf`` from currently
+ ``python3 cgmerge.py --write``. This will create a ``cgmerger.conf`` from currently
   loaded script setup. Next time you run the script, you don't have to specify any
    arguments in the command
 
@@ -59,7 +59,7 @@ This is the folder that is searched for files that will be merged into ``--outpu
 
 This is the last file that will be copied to the ``--output`` file. If you are
  working in python, this should probably be the file where the main 
- ``while True`` loop is placed. ``main.py`` by default.
+ ``while True`` loop is placed. ``cgmerge.py`` by default.
 
 ### file_regex/--file-regex _(conf file/command argument)_
 
@@ -94,7 +94,7 @@ What comment character is used in your language  -``#`` for python - the default
 ## Smart usage
 
 I use the script with PyCharm. I define a new file watcher that is pointing to 
-``main.py`` file. It works perfectly for ``python`` env.
+``cgmerge.py`` file. It works perfectly for ``python`` env.
 
 ## Todo
 
