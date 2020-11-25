@@ -8,7 +8,7 @@ parser = ArgumentParser(description="Merge contents of folder into one output fi
 parser.add_argument(
     "--output",
     type=str,
-    help="Output file location ('codingame.volatile.py' be " "default)",
+    help='Output file location ("codingame.volatile.py" be ' "default)",
 )
 parser.add_argument(
     "--workdir",
@@ -28,20 +28,20 @@ parser.add_argument(
     "all of the imports/using/includes here depending on your language)",
 )
 parser.add_argument(
-    "--comment", type=str, help="Comment character ('#' by default)",
+    "--comment", type=str, help='Comment character ("#" by default)',
 )
 parser.add_argument(
     "--separator-start",
     type=str,
     help="Character appended to comment "
-    "indicating start of file contents ('-' by "
+    'indicating start of file contents ("-" by '
     "default)",
 )
 parser.add_argument(
     "--separator-end",
     type=str,
     help="Character appended to comment "
-    "indicating end of file contents ('=' by "
+    'indicating end of file contents ("=" by '
     "default)",
 )
 parser.add_argument(
@@ -54,7 +54,15 @@ parser.add_argument(
     "--file-regex",
     type=str,
     help="pythonic regex used to filter-out files in "
-    "workdir ('.*' by default - it will process all of the files in the workdir folder)",
+    'workdir (".*" by default - it will process all of the files in the workdir '
+    "folder)",
+)
+parser.add_argument(
+    "--exclude-line-regex",
+    type=str,
+    help="pythonic regex used to filter-out lines of files that would cause a mess "
+    'during the merge ("^from codingame\.|^import codingame|^from \.|^import \." by '
+    "default to exclude python local imports)",
 )
 parser.add_argument("--debug", action="store_true", help="print current settings")
 parser.add_argument(
@@ -71,6 +79,7 @@ config = configparser.ConfigParser(
         "workdir": "codingame/",
         "main": "main.py",
         "file_regex": ".*",
+        "exclude_line_regex": "^from codingame\.|^import codingame|^from \.|^import \.",
         "comment": "#",
         "separator_start": "-",
         "separator_end": "=",
@@ -113,19 +122,14 @@ def check_is_in_workdir(file_name: str):
         )
 
 
-def write_to_output_file(file_name, current_file, output_file, work_dir):
+def write_to_output_file(file_name, current_file, output_file, exclude_line_regex):
     start_file_comment = f'{config["merger"]["comment"]} file "{file_name}" '.ljust(
         int(config["merger"]["separator_length"]),
         config["merger"]["separator_start"][0],
     )
     output_file.write(f"\n{start_file_comment}\n")
     for line in current_file.readlines():
-        if (
-            not line.startswith("from .")
-            and not line.startswith(f"from {work_dir}")
-            and not line.startswith(f"import {work_dir}")
-            and not line.startswith("import .")
-        ):
+        if not exclude_line_regex.search(line):
             output_file.write(line)
 
     end_file_comment = (
@@ -140,14 +144,16 @@ def write_to_output_file(file_name, current_file, output_file, work_dir):
 
 def log_values():
     print("")
-    print("file_regex: ", config["merger"].get("file_regex", "none"))
     print("output: ", config["merger"].get("output", "none"))
     print("workdir: ", config["merger"].get("workdir", "none"))
     print("main: ", config["merger"].get("main", "none"))
+    print("file_regex: ", config["merger"].get("file_regex", "none"))
+    print("exclude_line_regex: ", config["merger"].get("exclude_line_regex", "none"))
     print("header: ", config["merger"].get("header", "none"))
     print("comment: ", config["merger"].get("comment", "none"))
     print("separator_start: ", config["merger"].get("separator_start", "none"))
     print("separator_end: ", config["merger"].get("separator_end", "none"))
+    print("separator_length: ", config["merger"].get("separator_length", "none"))
     print("")
 
 
@@ -166,6 +172,8 @@ def main(arguments: Namespace):
 
     if arguments.file_regex is not None:
         config["merger"]["file_regex"] = arguments.file_regex
+    if arguments.exclude_line_regex is not None:
+        config["merger"]["exclude_line_regex"] = arguments.exclude_line_regex
     if arguments.output is not None:
         config["merger"]["output"] = arguments.output
     if arguments.workdir is not None:
@@ -196,6 +204,7 @@ def main(arguments: Namespace):
     main_file = config["merger"]["main"]
     work_dir = config["merger"]["workdir"]
     file_regex = re.compile(config["merger"]["file_regex"])
+    exclude_line_regex = re.compile(config["merger"]["exclude_line_regex"])
     header_file = None
 
     if "header" in config["merger"]:
@@ -219,7 +228,9 @@ def main(arguments: Namespace):
         # all of the files, which are not in main, are are not in order
         if header_file is not None:
             with open(header_file, "r") as current_file:
-                write_to_output_file(header_file, current_file, output_file, work_dir)
+                write_to_output_file(
+                    header_file, current_file, output_file, exclude_line_regex
+                )
 
         for f in files_to_watch:
             if f == main_file:
@@ -232,7 +243,7 @@ def main(arguments: Namespace):
                 continue
 
             with open(os.path.join(work_dir, f), "r") as current_file:
-                write_to_output_file(f, current_file, output_file, work_dir)
+                write_to_output_file(f, current_file, output_file, exclude_line_regex)
 
         # now files that should go in order
         if order is not None:
@@ -241,11 +252,15 @@ def main(arguments: Namespace):
                     continue
 
                 with open(os.path.join(work_dir, f), "r") as current_file:
-                    write_to_output_file(f, current_file, output_file, work_dir)
+                    write_to_output_file(
+                        f, current_file, output_file, exclude_line_regex
+                    )
 
         # Main will always be the last one
         with open(os.path.join(work_dir, main_file), "r") as current_file:
-            write_to_output_file(main_file, current_file, output_file, work_dir)
+            write_to_output_file(
+                main_file, current_file, output_file, exclude_line_regex
+            )
 
 
 if __name__ == "__main__":
