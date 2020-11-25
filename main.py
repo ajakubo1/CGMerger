@@ -4,14 +4,16 @@ import os
 import configparser
 from argparse import Namespace, ArgumentParser
 
-parser = ArgumentParser(description="Merge contents of folder into one " "output file")
+parser = ArgumentParser(description="Merge contents of folder into one output file")
 parser.add_argument(
-    "--output", type=str, help="Output file location", default="program.volatile.py"
+    "--output",
+    type=str,
+    help="Output file location ('program.volatile.py' be " "default)",
 )
 parser.add_argument(
     "--workdir",
     type=str,
-    help="Folder that will be searched for " "files to merge in output file",
+    help="Folder that will be searched for files to merge in output file",
 )
 parser.add_argument(
     "--main",
@@ -26,11 +28,21 @@ parser.add_argument(
     "all of the imports/using/includes here depending on your language)",
 )
 parser.add_argument(
-    "--file-regex", type=str, help="regex used to filter-out files in workdir",
+    "--comment", type=str, help="Comment character ('#' by default)",
+)
+parser.add_argument(
+    "--file-regex",
+    type=str,
+    help="pythonic regex used to filter-out files in "
+    "workdir ('.*' by default - it will process all of the files in the workdir folder)",
 )
 parser.add_argument("--debug", action="store_true", help="print current settings")
 parser.add_argument(
-    "--write", action="store_true", help="Write current settings in form of a file"
+    "--write",
+    action="store_true",
+    help="Write current settings in form of a file ("
+    "they will be used instead of the command "
+    "line settings)",
 )
 
 config = configparser.ConfigParser(
@@ -39,6 +51,7 @@ config = configparser.ConfigParser(
         "workdir": "program",
         "main": "main.py",
         "file_regex": ".*",
+        "comment": "#",
     },
     default_section="merger",
 )
@@ -79,7 +92,8 @@ def check_is_in_workdir(file_name: str):
 
 def write_to_output_file(file_name, current_file, output_file, work_dir):
     output_file.write(
-        f'\n# file "{file_name}" ' f"----------------------------------\n"
+        f'\n{config["merger"]["comment"]} file "{file_name}" '
+        f"----------------------------------\n"
     )
     for line in current_file.readlines():
         if (
@@ -90,7 +104,8 @@ def write_to_output_file(file_name, current_file, output_file, work_dir):
         ):
             output_file.write(line)
     output_file.write(
-        f'\n\n\n# endof "{file_name} ' f'================================="\n'
+        f'\n\n\n{config["merger"]["comment"]} endof "{file_name} '
+        f'================================="\n'
     )
 
 
@@ -98,12 +113,14 @@ def main(arguments: Namespace):
     if os.path.exists("cgmerger.conf"):
         config.read("cgmerger.conf")
     else:
+        print("")
         print(
             "No cgmerger.conf file found. The script will run with default "
             "settings. run the command with --write flat to write new cgmerger.conf "
             "file or override the current one. Run the command with --debug flag to "
             "check the current settings"
         )
+        print("")
 
     if arguments.file_regex is not None:
         config["merger"]["file_regex"] = arguments.file_regex
@@ -115,13 +132,17 @@ def main(arguments: Namespace):
         config["merger"]["main"] = arguments.main
     if arguments.header is not None:
         config["merger"]["header"] = arguments.header
+    if arguments.comment is not None:
+        config["merger"]["comment"] = arguments.comment
 
     if arguments.debug:
+        print("")
         print("file_regex: ", config["merger"].get("file_regex", "none"))
         print("output: ", config["merger"].get("output", "none"))
         print("workdir: ", config["merger"].get("workdir", "none"))
         print("main: ", config["merger"].get("main", "none"))
         print("header: ", config["merger"].get("header", "none"))
+        print("comment: ", config["merger"].get("comment", "none"))
         print("")
         print("No other operations will be performed")
         return
