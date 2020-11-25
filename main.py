@@ -31,8 +31,10 @@ parser.add_argument(
 parser.add_argument(
     "--file-regex", type=str, help="regex used to filter-out files in workdir",
 )
-
-parser.add_argument("--debug", action="store_true", help="print " "current settings")
+parser.add_argument("--debug", action="store_true", help="print current settings")
+parser.add_argument(
+    "--write", action="store_true", help="Write current settings in form of a file"
+)
 
 config = configparser.ConfigParser(
     defaults={
@@ -53,6 +55,13 @@ def check_output_exists():
     if not os.path.exists(config["merger"]["output"]):
         raise Exception(
             f"No \"{config['merger']['output']}\" file present in {os.getcwd()}"
+        )
+
+
+def check_header_exists():
+    if not os.path.exists(config["merger"]["header"]):
+        raise Exception(
+            f"No \"{config['merger']['header']}\" file present in {os.getcwd()}"
         )
 
 
@@ -92,9 +101,12 @@ def main(arguments: Namespace):
     if os.path.exists("cgmerger.conf"):
         config.read("cgmerger.conf")
     else:
-        pass
-        # with open("cgmerger.conf", "w") as config_file:
-        #     config.write(config_file)
+        print(
+            "No cgmerger.conf file found. The script will run with default "
+            "settings. run the command with --write flat to write new cgmerger.conf "
+            "file or override the current one. Run the command with --debug flag to "
+            "check the current settings"
+        )
 
     if arguments.file_regex is not None:
         config["merger"]["file_regex"] = arguments.file_regex
@@ -113,6 +125,14 @@ def main(arguments: Namespace):
         print("workdir: ", config["merger"].get("workdir", "none"))
         print("main: ", config["merger"].get("main", "none"))
         print("header: ", config["merger"].get("header", "none"))
+        print("")
+        print("No other operations will be performed")
+        return
+
+    if arguments.write:
+        with open("cgmerger.conf", "w") as config_file:
+            config.write(config_file)
+        return
 
     try:
         check_output_exists()
@@ -146,6 +166,13 @@ def main(arguments: Namespace):
             except Exception as e:
                 print(e)
                 return
+
+    if header_file is not None:
+        try:
+            check_header_exists()
+        except Exception as e:
+            print(e)
+            return
 
     files_to_watch = [
         f for f in os.listdir(work_dir) if os.path.isfile(os.path.join(work_dir, f))
