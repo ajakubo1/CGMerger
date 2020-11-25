@@ -122,24 +122,27 @@ def check_is_in_workdir(file_name: str):
         )
 
 
-def write_to_output_file(file_name, current_file, output_file, exclude_line_regex):
-    start_file_comment = f'{config["merger"]["comment"]} file "{file_name}" '.ljust(
-        int(config["merger"]["separator_length"]),
-        config["merger"]["separator_start"][0],
-    )
-    output_file.write(f"\n{start_file_comment}\n")
+def write_to_output_file(
+    file_name, current_file, output_file, exclude_line_regex, disable_headers=False
+):
+    if not disable_headers:
+        start_file_comment = f'{config["merger"]["comment"]} file "{file_name}" '.ljust(
+            int(config["merger"]["separator_length"]),
+            config["merger"]["separator_start"][0],
+        )
+        output_file.write(f"\n{start_file_comment}\n")
     for line in current_file.readlines():
         if not exclude_line_regex.search(line):
             output_file.write(line)
-
-    end_file_comment = (
-        f'{config["merger"]["comment"]} end of file "{file_name}" '
-        f"".ljust(
-            int(config["merger"]["separator_length"]),
-            config["merger"]["separator_end"][0],
+    if not disable_headers:
+        end_file_comment = (
+            f'{config["merger"]["comment"]} end of file "{file_name}" '
+            f"".ljust(
+                int(config["merger"]["separator_length"]),
+                config["merger"]["separator_end"][0],
+            )
         )
-    )
-    output_file.write(f"\n\n\n{end_file_comment}\n")
+        output_file.write(f"\n\n\n{end_file_comment}\n")
 
 
 def log_values():
@@ -229,7 +232,11 @@ def main(arguments: Namespace):
         if header_file is not None:
             with open(header_file, "r") as current_file:
                 write_to_output_file(
-                    header_file, current_file, output_file, exclude_line_regex
+                    header_file,
+                    current_file,
+                    output_file,
+                    exclude_line_regex,
+                    disable_headers=True,
                 )
 
         for f in files_to_watch:
@@ -259,7 +266,11 @@ def main(arguments: Namespace):
         # Main will always be the last one
         with open(os.path.join(work_dir, main_file), "r") as current_file:
             write_to_output_file(
-                main_file, current_file, output_file, exclude_line_regex
+                main_file,
+                current_file,
+                output_file,
+                exclude_line_regex,
+                disable_headers=True,
             )
 
 
