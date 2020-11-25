@@ -8,7 +8,7 @@ parser = ArgumentParser(description="Merge contents of folder into one output fi
 parser.add_argument(
     "--output",
     type=str,
-    help="Output file location ('program.volatile.py' be " "default)",
+    help="Output file location ('codingame.volatile.py' be " "default)",
 )
 parser.add_argument(
     "--workdir",
@@ -47,8 +47,8 @@ parser.add_argument(
 
 config = configparser.ConfigParser(
     defaults={
-        "output": "program.volatile.py",
-        "workdir": "program",
+        "output": "codingame.volatile.py",
+        "workdir": "codingame/",
         "main": "main.py",
         "file_regex": ".*",
         "comment": "#",
@@ -109,6 +109,17 @@ def write_to_output_file(file_name, current_file, output_file, work_dir):
     )
 
 
+def log_values():
+    print("")
+    print("file_regex: ", config["merger"].get("file_regex", "none"))
+    print("output: ", config["merger"].get("output", "none"))
+    print("workdir: ", config["merger"].get("workdir", "none"))
+    print("main: ", config["merger"].get("main", "none"))
+    print("header: ", config["merger"].get("header", "none"))
+    print("comment: ", config["merger"].get("comment", "none"))
+    print("")
+
+
 def main(arguments: Namespace):
     if os.path.exists("cgmerger.conf"):
         config.read("cgmerger.conf")
@@ -136,21 +147,14 @@ def main(arguments: Namespace):
         config["merger"]["comment"] = arguments.comment
 
     if arguments.debug:
-        print("")
-        print("file_regex: ", config["merger"].get("file_regex", "none"))
-        print("output: ", config["merger"].get("output", "none"))
-        print("workdir: ", config["merger"].get("workdir", "none"))
-        print("main: ", config["merger"].get("main", "none"))
-        print("header: ", config["merger"].get("header", "none"))
-        print("comment: ", config["merger"].get("comment", "none"))
-        print("")
-        print("No other operations will be performed")
-        return
+        log_values()
+        parser.exit(message="No further operations will be performed")
 
     if arguments.write:
         with open("cgmerger.conf", "w") as config_file:
             config.write(config_file)
-        return
+        log_values()
+        parser.exit(message="Config file created with listed values")
 
     check_output_exists()
 
