@@ -45,6 +45,12 @@ parser.add_argument(
     "default)",
 )
 parser.add_argument(
+    "--separator-length",
+    type=str,
+    help="how many characters to left-pad to indicate contents from other files (80 "
+    "by default)",
+)
+parser.add_argument(
     "--file-regex",
     type=str,
     help="pythonic regex used to filter-out files in "
@@ -68,6 +74,7 @@ config = configparser.ConfigParser(
         "comment": "#",
         "separator_start": "-",
         "separator_end": "=",
+        "separator_length": "80",
     },
     default_section="merger",
 )
@@ -108,7 +115,8 @@ def check_is_in_workdir(file_name: str):
 
 def write_to_output_file(file_name, current_file, output_file, work_dir):
     start_file_comment = f'{config["merger"]["comment"]} file "{file_name}" '.ljust(
-        80, config["merger"]["separator_start"][0]
+        int(config["merger"]["separator_length"]),
+        config["merger"]["separator_start"][0],
     )
     output_file.write(f"\n{start_file_comment}\n")
     for line in current_file.readlines():
@@ -122,7 +130,10 @@ def write_to_output_file(file_name, current_file, output_file, work_dir):
 
     end_file_comment = (
         f'{config["merger"]["comment"]} end of file "{file_name}" '
-        f"".ljust(80, config["merger"]["separator_end"][0])
+        f"".ljust(
+            int(config["merger"]["separator_length"]),
+            config["merger"]["separator_end"][0],
+        )
     )
     output_file.write(f"\n\n\n{end_file_comment}\n")
 
