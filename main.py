@@ -31,6 +31,20 @@ parser.add_argument(
     "--comment", type=str, help="Comment character ('#' by default)",
 )
 parser.add_argument(
+    "--separator-start",
+    type=str,
+    help="Character appended to comment "
+    "indicating start of file contents ('-' by "
+    "default)",
+)
+parser.add_argument(
+    "--separator-end",
+    type=str,
+    help="Character appended to comment "
+    "indicating end of file contents ('=' by "
+    "default)",
+)
+parser.add_argument(
     "--file-regex",
     type=str,
     help="pythonic regex used to filter-out files in "
@@ -52,6 +66,8 @@ config = configparser.ConfigParser(
         "main": "main.py",
         "file_regex": ".*",
         "comment": "#",
+        "separator_start": "-",
+        "separator_end": "=",
     },
     default_section="merger",
 )
@@ -91,10 +107,10 @@ def check_is_in_workdir(file_name: str):
 
 
 def write_to_output_file(file_name, current_file, output_file, work_dir):
-    output_file.write(
-        f'\n{config["merger"]["comment"]} file "{file_name}" '
-        f"----------------------------------\n"
+    start_file_comment = f'{config["merger"]["comment"]} file "{file_name}" '.ljust(
+        80, config["merger"]["separator_start"][0]
     )
+    output_file.write(f"\n{start_file_comment}\n")
     for line in current_file.readlines():
         if (
             not line.startswith("from .")
@@ -103,10 +119,12 @@ def write_to_output_file(file_name, current_file, output_file, work_dir):
             and not line.startswith("import .")
         ):
             output_file.write(line)
-    output_file.write(
-        f'\n\n\n{config["merger"]["comment"]} endof "{file_name} '
-        f'================================="\n'
+
+    end_file_comment = (
+        f'{config["merger"]["comment"]} end of file "{file_name}" '
+        f"".ljust(80, config["merger"]["separator_end"][0])
     )
+    output_file.write(f"\n\n\n{end_file_comment}\n")
 
 
 def log_values():
@@ -117,6 +135,8 @@ def log_values():
     print("main: ", config["merger"].get("main", "none"))
     print("header: ", config["merger"].get("header", "none"))
     print("comment: ", config["merger"].get("comment", "none"))
+    print("separator_start: ", config["merger"].get("separator_start", "none"))
+    print("separator_end: ", config["merger"].get("separator_end", "none"))
     print("")
 
 
