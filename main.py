@@ -3,6 +3,7 @@ import re
 import os
 import configparser
 import argparse
+from argparse import Namespace
 
 parser = argparse.ArgumentParser(
     description="Merge contents of folder into one " "output file"
@@ -13,13 +14,11 @@ parser.add_argument(
 parser.add_argument(
     "--workdir",
     type=str,
-    default="program",
     help="Folder that will be searched for " "files to merge in output file",
 )
 parser.add_argument(
     "--main",
     type=str,
-    default="main.py",
     help="main file in workdir that will be copied the last (main loop should be "
     "placed in here)",
 )
@@ -30,14 +29,10 @@ parser.add_argument(
     "all of the imports/using/includes here depending on your language)",
 )
 parser.add_argument(
-    "--file-regex",
-    type=str,
-    default=".*",
-    help="regex used to filter-out files in workdir",
+    "--file-regex", type=str, help="regex used to filter-out files in workdir",
 )
-args = parser.parse_args()
 
-print(args)
+parser.add_argument("--debug", action="store_true", help="print " "current settings")
 
 config = configparser.ConfigParser(
     defaults={
@@ -93,13 +88,31 @@ def write_to_output_file(file_name, current_file, output_file, work_dir):
     )
 
 
-def main():
-
+def main(arguments: Namespace):
     if os.path.exists("cgmerger.conf"):
         config.read("cgmerger.conf")
     else:
-        with open("cgmerger.conf", "w") as config_file:
-            config.write(config_file)
+        pass
+        # with open("cgmerger.conf", "w") as config_file:
+        #     config.write(config_file)
+
+    if arguments.file_regex is not None:
+        config["merger"]["file_regex"] = arguments.file_regex
+    if arguments.output is not None:
+        config["merger"]["output"] = arguments.output
+    if arguments.workdir is not None:
+        config["merger"]["workdir"] = arguments.workdir
+    if arguments.main is not None:
+        config["merger"]["main"] = arguments.main
+    if arguments.header is not None:
+        config["merger"]["header"] = arguments.header
+
+    if arguments.debug:
+        print("file_regex: ", config["merger"].get("file_regex", "none"))
+        print("output: ", config["merger"].get("output", "none"))
+        print("workdir: ", config["merger"].get("workdir", "none"))
+        print("main: ", config["merger"].get("main", "none"))
+        print("header: ", config["merger"].get("header", "none"))
 
     try:
         check_output_exists()
@@ -172,4 +185,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    args = parser.parse_args()
+    main(args)
