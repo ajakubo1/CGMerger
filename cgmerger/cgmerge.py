@@ -1,8 +1,7 @@
-#!/usr/local/bin/python3
 import re
 import os
 import configparser
-from argparse import Namespace, ArgumentParser
+from argparse import ArgumentParser
 
 parser = ArgumentParser(description="Merge contents of folder into one output file")
 parser.add_argument(
@@ -165,7 +164,8 @@ def log_values():
     print("")
 
 
-def main(arguments: Namespace):
+def main():
+    arguments = parser.parse_args()
     if os.path.exists("cgmerger.conf"):
         config.read("cgmerger.conf")
     else:
