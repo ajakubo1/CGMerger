@@ -1,7 +1,7 @@
 import re
 import os
 import configparser
-from argparse import ArgumentParser
+from argparse import Namespace, ArgumentParser
 
 import chardet
 
@@ -17,16 +17,21 @@ parser.add_argument(
     help="Folder that will be searched for files to merge in output file",
 )
 parser.add_argument(
-    "--main",
+    "--order",
     type=str,
-    help="main file in workdir that will be copied the last (main loop should be "
-    "placed in here)",
+    help="Forcing the order of files copied from the workdir (use comma-separated "
+    "file names)",
 )
 parser.add_argument(
     "--header",
     type=str,
     help="File from which the top part of output file will be copied (you should put "
     "all of the imports/using/includes here depending on your language)",
+)
+parser.add_argument(
+    "--footer",
+    type=str,
+    help="File from which the bottom part of output file will be copied",
 )
 parser.add_argument(
     "--comment", type=str, help='Comment character ("#" by default)',
@@ -78,7 +83,6 @@ config = configparser.ConfigParser(
     defaults={
         "output": "codingame.volatile.py",
         "workdir": "codingame/",
-        "main": "main.py",
         "file_regex": ".*",
         "exclude_line_regex": "^from codingame\.|^import codingame|^from \.|^import \.",
         "comment": "#",
@@ -90,36 +94,15 @@ config = configparser.ConfigParser(
 )
 
 
-def in_workdir(file_name: str):
-    return os.path.isdir(os.path.join(config["merger"]["workdir"], file_name))
-
-
-def check_output_exists():
-    if not os.path.exists(config["merger"]["output"]):
-        parser.error(
-            f"No \"{config['merger']['output']}\" file present in {os.getcwd()}"
-        )
-
-
-def check_header_exists():
-    if not os.path.exists(config["merger"]["header"]):
-        parser.error(
-            f"No \"{config['merger']['header']}\" file present in {os.getcwd()}"
-        )
+def check_file_exists(file_path):
+    if not os.path.exists(file_path):
+        parser.error(f'No "{file_path}" file present in {os.getcwd()}')
 
 
 def check_workdir_exists():
     if not os.path.isdir(config["merger"]["workdir"]):
         parser.error(
             f"No \"{config['merger']['workdir']}\" directory present in {os.getcwd()}"
-        )
-
-
-def check_is_in_workdir(file_name: str):
-    if not in_workdir(file_name):
-        parser.error(
-            f'No "{file_name}" directory present in {os.getcwd()}'
-            f'/{config["merger"]["workdir"]}',
         )
 
 
@@ -160,15 +143,82 @@ def log_values():
     print("")
     print("output: ", config["merger"].get("output", "none"))
     print("workdir: ", config["merger"].get("workdir", "none"))
-    print("main: ", config["merger"].get("main", "none"))
+    print("order: ", config["merger"].get("order", "none"))
     print("file_regex: ", config["merger"].get("file_regex", "none"))
     print("exclude_line_regex: ", config["merger"].get("exclude_line_regex", "none"))
     print("header: ", config["merger"].get("header", "none"))
+    print("footer: ", config["merger"].get("footer", "none"))
     print("comment: ", config["merger"].get("comment", "none"))
     print("separator_start: ", config["merger"].get("separator_start", "none"))
     print("separator_end: ", config["merger"].get("separator_end", "none"))
     print("separator_length: ", config["merger"].get("separator_length", "none"))
     print("")
+
+
+def copy_parser_arguments_to_config(arguments: Namespace):
+    if arguments.file_regex is not None:
+        config["merger"]["file_regex"] = arguments.file_regex
+    if arguments.exclude_line_regex is not None:
+        config["merger"]["exclude_line_regex"] = arguments.exclude_line_regex
+    if arguments.output is not None:
+        config["merger"]["output"] = arguments.output
+    if arguments.workdir is not None:
+        config["merger"]["workdir"] = arguments.workdir
+    if arguments.header is not None:
+        config["merger"]["header"] = arguments.header
+    if arguments.footer is not None:
+        config["merger"]["footer"] = arguments.header
+    if arguments.comment is not None:
+        config["merger"]["comment"] = arguments.comment
+    if arguments.order is not None:
+        config["merger"]["order"] = arguments.order
+
+
+def get_parameters_from_config():
+    order = None
+    output_file_location = config["merger"]["output"]
+    work_dir = config["merger"]["workdir"]
+    file_regex = re.compile(config["merger"]["file_regex"])
+    exclude_line_regex = re.compile(config["merger"]["exclude_line_regex"])
+    header_file = None
+    footer_file = None
+
+    if "header" in config["merger"]:
+        header_file = config["merger"]["header"]
+
+    if "footer" in config["merger"]:
+        footer_file = config["merger"]["footer"]
+
+    if "order" in config["merger"]:
+        order = config["merger"]["order"].split(",")
+
+    check_file_exists(output_file_location)
+    check_workdir_exists()
+
+    if order is not None:
+        for file_name in order:
+            check_file_exists(os.path.join(work_dir, file_name))
+
+    if header_file is not None:
+        check_file_exists(os.path.join(work_dir, header_file))
+
+    if footer_file is not None:
+        check_file_exists(os.path.join(work_dir, footer_file))
+
+    files_to_watch = [
+        f for f in os.listdir(work_dir) if os.path.isfile(os.path.join(work_dir, f))
+    ]
+
+    return (
+        order,
+        output_file_location,
+        work_dir,
+        file_regex,
+        exclude_line_regex,
+        header_file,
+        footer_file,
+        files_to_watch,
+    )
 
 
 def main():
@@ -185,20 +235,7 @@ def main():
         )
         print("")
 
-    if arguments.file_regex is not None:
-        config["merger"]["file_regex"] = arguments.file_regex
-    if arguments.exclude_line_regex is not None:
-        config["merger"]["exclude_line_regex"] = arguments.exclude_line_regex
-    if arguments.output is not None:
-        config["merger"]["output"] = arguments.output
-    if arguments.workdir is not None:
-        config["merger"]["workdir"] = arguments.workdir
-    if arguments.main is not None:
-        config["merger"]["main"] = arguments.main
-    if arguments.header is not None:
-        config["merger"]["header"] = arguments.header
-    if arguments.comment is not None:
-        config["merger"]["comment"] = arguments.comment
+    copy_parser_arguments_to_config(arguments)
 
     if arguments.debug:
         log_values()
@@ -210,51 +247,50 @@ def main():
         log_values()
         parser.exit(message="Config file created with listed values")
 
-    check_output_exists()
-
-    check_workdir_exists()
-
-    order = None
-    output_file_location = config["merger"]["output"]
-    main_file = config["merger"]["main"]
-    work_dir = config["merger"]["workdir"]
-    file_regex = re.compile(config["merger"]["file_regex"])
-    exclude_line_regex = re.compile(config["merger"]["exclude_line_regex"])
-    header_file = None
-
-    if "header" in config["merger"]:
-        header_file = config["merger"]["header"]
-
-    if "order" in config["merger"]:
-        order = config["merger"]["order"].split(",")
-
-    if order is not None:
-        for file_name in order:
-            check_is_in_workdir(file_name)
-
-    if header_file is not None:
-        check_header_exists()
-
-    files_to_watch = [
-        f for f in os.listdir(work_dir) if os.path.isfile(os.path.join(work_dir, f))
-    ]
+    (
+        order,
+        output_file_location,
+        work_dir,
+        file_regex,
+        exclude_line_regex,
+        header_file,
+        footer_file,
+        files_to_watch,
+    ) = get_parameters_from_config()
 
     with open(output_file_location, "w") as output_file:
-        # all of the files, which are not in main, are are not in order
+        # all of the files, which are not in order
         if header_file is not None:
             write_to_output_file(
-                header_file,
+                os.path.join(work_dir, header_file),
                 output_file,
                 exclude_line_regex,
                 disable_headers=True,
                 ignore_regex=True,
             )
 
+        # now files that should go in order
+        if order is not None:
+            for f in order:
+
+                if f == header_file:
+                    continue
+
+                if f == footer_file:
+                    continue
+
+                write_to_output_file(
+                    os.path.join(work_dir, f), output_file, exclude_line_regex
+                )
+
         for f in files_to_watch:
-            if f == main_file:
+            if order is not None and f in order:
                 continue
 
-            if order is not None and f in order:
+            if f == header_file:
+                continue
+
+            if f == footer_file:
                 continue
 
             if not file_regex.search(f):
@@ -264,20 +300,10 @@ def main():
                 os.path.join(work_dir, f), output_file, exclude_line_regex
             )
 
-        # now files that should go in order
-        if order is not None:
-            for f in order:
-                if f == main_file:
-                    continue
-
-                write_to_output_file(
-                    os.path.join(work_dir, f), output_file, exclude_line_regex
-                )
-
-        # Main will always be the last one
-        write_to_output_file(
-            os.path.join(work_dir, main_file),
-            output_file,
-            exclude_line_regex,
-            disable_headers=True,
-        )
+        if footer_file is not None:
+            write_to_output_file(
+                os.path.join(work_dir, footer_file),
+                output_file,
+                exclude_line_regex,
+                disable_headers=True,
+            )
