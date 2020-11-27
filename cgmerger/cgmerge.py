@@ -17,12 +17,6 @@ parser.add_argument(
     help="Folder that will be searched for files to merge in output file",
 )
 parser.add_argument(
-    "--main",
-    type=str,
-    help="main file in workdir that will be copied the last (main loop should be "
-    "placed in here)",
-)
-parser.add_argument(
     "--header",
     type=str,
     help="File from which the top part of output file will be copied (you should put "
@@ -78,7 +72,6 @@ config = configparser.ConfigParser(
     defaults={
         "output": "codingame.volatile.py",
         "workdir": "codingame/",
-        "main": "main.py",
         "file_regex": ".*",
         "exclude_line_regex": "^from codingame\.|^import codingame|^from \.|^import \.",
         "comment": "#",
@@ -160,7 +153,6 @@ def log_values():
     print("")
     print("output: ", config["merger"].get("output", "none"))
     print("workdir: ", config["merger"].get("workdir", "none"))
-    print("main: ", config["merger"].get("main", "none"))
     print("file_regex: ", config["merger"].get("file_regex", "none"))
     print("exclude_line_regex: ", config["merger"].get("exclude_line_regex", "none"))
     print("header: ", config["merger"].get("header", "none"))
@@ -193,8 +185,6 @@ def main():
         config["merger"]["output"] = arguments.output
     if arguments.workdir is not None:
         config["merger"]["workdir"] = arguments.workdir
-    if arguments.main is not None:
-        config["merger"]["main"] = arguments.main
     if arguments.header is not None:
         config["merger"]["header"] = arguments.header
     if arguments.comment is not None:
@@ -216,7 +206,6 @@ def main():
 
     order = None
     output_file_location = config["merger"]["output"]
-    main_file = config["merger"]["main"]
     work_dir = config["merger"]["workdir"]
     file_regex = re.compile(config["merger"]["file_regex"])
     exclude_line_regex = re.compile(config["merger"]["exclude_line_regex"])
@@ -240,7 +229,7 @@ def main():
     ]
 
     with open(output_file_location, "w") as output_file:
-        # all of the files, which are not in main, are are not in order
+        # all of the files, which are not in order
         if header_file is not None:
             write_to_output_file(
                 header_file,
@@ -251,9 +240,6 @@ def main():
             )
 
         for f in files_to_watch:
-            if f == main_file:
-                continue
-
             if order is not None and f in order:
                 continue
 
@@ -267,17 +253,6 @@ def main():
         # now files that should go in order
         if order is not None:
             for f in order:
-                if f == main_file:
-                    continue
-
                 write_to_output_file(
                     os.path.join(work_dir, f), output_file, exclude_line_regex
                 )
-
-        # Main will always be the last one
-        write_to_output_file(
-            os.path.join(work_dir, main_file),
-            output_file,
-            exclude_line_regex,
-            disable_headers=True,
-        )
