@@ -17,6 +17,12 @@ parser.add_argument(
     help="Folder that will be searched for files to merge in output file",
 )
 parser.add_argument(
+    "--order",
+    type=str,
+    help="Forcing the order of files copied from the workdir (use comma-separated "
+    "file names)",
+)
+parser.add_argument(
     "--header",
     type=str,
     help="File from which the top part of output file will be copied (you should put "
@@ -153,6 +159,7 @@ def log_values():
     print("")
     print("output: ", config["merger"].get("output", "none"))
     print("workdir: ", config["merger"].get("workdir", "none"))
+    print("order: ", config["merger"].get("order", "none"))
     print("file_regex: ", config["merger"].get("file_regex", "none"))
     print("exclude_line_regex: ", config["merger"].get("exclude_line_regex", "none"))
     print("header: ", config["merger"].get("header", "none"))
@@ -189,6 +196,8 @@ def main():
         config["merger"]["header"] = arguments.header
     if arguments.comment is not None:
         config["merger"]["comment"] = arguments.comment
+    if arguments.order is not None:
+        config["merger"]["order"] = arguments.order
 
     if arguments.debug:
         log_values()
