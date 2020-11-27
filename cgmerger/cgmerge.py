@@ -1,7 +1,7 @@
 import re
 import os
 import configparser
-from argparse import ArgumentParser
+from argparse import Namespace, ArgumentParser
 
 import chardet
 
@@ -27,6 +27,11 @@ parser.add_argument(
     type=str,
     help="File from which the top part of output file will be copied (you should put "
     "all of the imports/using/includes here depending on your language)",
+)
+parser.add_argument(
+    "--footer",
+    type=str,
+    help="File from which the bottom part of output file will be copied",
 )
 parser.add_argument(
     "--comment", type=str, help='Comment character ("#" by default)',
@@ -107,6 +112,13 @@ def check_header_exists():
         )
 
 
+def check_footer_exists():
+    if not os.path.exists(config["merger"]["footer"]):
+        parser.error(
+            f"No \"{config['merger']['footer']}\" file present in {os.getcwd()}"
+        )
+
+
 def check_workdir_exists():
     if not os.path.isdir(config["merger"]["workdir"]):
         parser.error(
@@ -170,6 +182,25 @@ def log_values():
     print("")
 
 
+def copy_parser_arguments_to_config(arguments: Namespace):
+    if arguments.file_regex is not None:
+        config["merger"]["file_regex"] = arguments.file_regex
+    if arguments.exclude_line_regex is not None:
+        config["merger"]["exclude_line_regex"] = arguments.exclude_line_regex
+    if arguments.output is not None:
+        config["merger"]["output"] = arguments.output
+    if arguments.workdir is not None:
+        config["merger"]["workdir"] = arguments.workdir
+    if arguments.header is not None:
+        config["merger"]["header"] = arguments.header
+    if arguments.footer is not None:
+        config["merger"]["footer"] = arguments.header
+    if arguments.comment is not None:
+        config["merger"]["comment"] = arguments.comment
+    if arguments.order is not None:
+        config["merger"]["order"] = arguments.order
+
+
 def main():
     arguments = parser.parse_args()
     if os.path.exists("cgmerger.conf"):
@@ -184,20 +215,7 @@ def main():
         )
         print("")
 
-    if arguments.file_regex is not None:
-        config["merger"]["file_regex"] = arguments.file_regex
-    if arguments.exclude_line_regex is not None:
-        config["merger"]["exclude_line_regex"] = arguments.exclude_line_regex
-    if arguments.output is not None:
-        config["merger"]["output"] = arguments.output
-    if arguments.workdir is not None:
-        config["merger"]["workdir"] = arguments.workdir
-    if arguments.header is not None:
-        config["merger"]["header"] = arguments.header
-    if arguments.comment is not None:
-        config["merger"]["comment"] = arguments.comment
-    if arguments.order is not None:
-        config["merger"]["order"] = arguments.order
+    copy_parser_arguments_to_config(arguments)
 
     if arguments.debug:
         log_values()
@@ -219,9 +237,13 @@ def main():
     file_regex = re.compile(config["merger"]["file_regex"])
     exclude_line_regex = re.compile(config["merger"]["exclude_line_regex"])
     header_file = None
+    footer_file = None
 
     if "header" in config["merger"]:
         header_file = config["merger"]["header"]
+
+    if "footer" in config["merger"]:
+        footer_file = config["merger"]["header"]
 
     if "order" in config["merger"]:
         order = config["merger"]["order"].split(",")
@@ -231,6 +253,9 @@ def main():
             check_is_in_workdir(file_name)
 
     if header_file is not None:
+        check_header_exists()
+
+    if footer_file is not None:
         check_header_exists()
 
     files_to_watch = [
@@ -264,4 +289,13 @@ def main():
 
             write_to_output_file(
                 os.path.join(work_dir, f), output_file, exclude_line_regex
+            )
+
+        if footer_file is not None:
+            write_to_output_file(
+                footer_file,
+                output_file,
+                exclude_line_regex,
+                disable_headers=True,
+                ignore_regex=True,
             )
