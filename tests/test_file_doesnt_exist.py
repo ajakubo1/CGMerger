@@ -43,7 +43,7 @@ class FileDoesntExist(unittest.TestCase):
             main()
 
     @patch("cgmerger.cgmerge.parser")
-    @patch("cgmerger.cgmerge.os.path.exists")
+    @patch("cgmerger.cgmerge.os.path.isfile")
     @patch("cgmerger.cgmerge.os.path.isdir")
     def test_default_workdir_doesnt_exist(self, is_dir, path_exists, parser):
         path_exists.return_value = True
@@ -55,3 +55,18 @@ class FileDoesntExist(unittest.TestCase):
             TestException, msg='No "codingame/" directory present in '
         ):
             main()
+
+    @patch("cgmerger.cgmerge.parser")
+    @patch("cgmerger.cgmerge.os.path.isfile")
+    @patch("cgmerger.cgmerge.os.path.isdir")
+    @patch("cgmerger.cgmerge.os.listdir")
+    @patch("cgmerger.cgmerge.open")
+    def test_create_default_output(self, open, listdir, is_dir, path_exists, parser):
+        path_exists.return_value = True
+        is_dir.return_value = True
+        listdir.return_value = []
+        args_mock = self.get_default_args()
+        parser.error = self.raise_exception
+        parser.parse_args.return_value = args_mock
+        main()
+        open.assert_called_once_with("codingame.volatile.py", "w")

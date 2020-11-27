@@ -95,7 +95,7 @@ config = configparser.ConfigParser(
 
 
 def check_file_exists(file_path):
-    if not os.path.exists(file_path):
+    if not os.path.isfile(file_path):
         parser.error(f'No "{file_path}" file present in {os.getcwd()}')
 
 
