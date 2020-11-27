@@ -24,6 +24,12 @@ class FileDoesntExist(unittest.TestCase):
         args_mock.write = False
         return args_mock
 
+    def path_exists_wrapper(self, **kwargs):
+        def real_path_exists(path: str):
+            return kwargs.get(path, False)
+
+        return real_path_exists
+
     @patch("cgmerger.cgmerge.parser")
     @patch("cgmerger.cgmerge.os.path.exists")
     def test_default_output_file_doesnt_exist(self, path_exists, parser):
@@ -33,5 +39,19 @@ class FileDoesntExist(unittest.TestCase):
         parser.parse_args.return_value = args_mock
         with self.assertRaises(
             TestException, msg='No "codingame.volatile.py" file present in '
+        ):
+            main()
+
+    @patch("cgmerger.cgmerge.parser")
+    @patch("cgmerger.cgmerge.os.path.exists")
+    @patch("cgmerger.cgmerge.os.path.isdir")
+    def test_default_workdir_doesnt_exist(self, is_dir, path_exists, parser):
+        path_exists.return_value = True
+        is_dir.return_value = False
+        args_mock = self.get_default_args()
+        parser.error = self.raise_exception
+        parser.parse_args.return_value = args_mock
+        with self.assertRaises(
+            TestException, msg='No "codingame/" directory present in '
         ):
             main()
