@@ -3,6 +3,8 @@ import os
 import configparser
 from argparse import ArgumentParser
 
+import chardet
+
 parser = ArgumentParser(description="Merge contents of folder into one output file")
 parser.add_argument(
     "--output",
@@ -123,30 +125,35 @@ def check_is_in_workdir(file_name: str):
 
 def write_to_output_file(
     file_name,
-    current_file,
     output_file,
     exclude_line_regex,
     disable_headers=False,
     ignore_regex=False,
 ):
-    if not disable_headers:
-        start_file_comment = f'{config["merger"]["comment"]} file "{file_name}" '.ljust(
-            int(config["merger"]["separator_length"]),
-            config["merger"]["separator_start"][0],
-        )
-        output_file.write(f"\n{start_file_comment}\n")
-    for line in current_file.readlines():
-        if ignore_regex or not exclude_line_regex.search(line):
-            output_file.write(line)
-    if not disable_headers:
-        end_file_comment = (
-            f'{config["merger"]["comment"]} end of file "{file_name}" '
-            f"".ljust(
+    bytes = min(32, os.path.getsize(file_name))
+    with open(file_name, "rb") as byte_file:
+        raw = byte_file.read(bytes)
+        encoding = chardet.detect(raw)["encoding"]
+
+    with open(file_name, "r", encoding=encoding) as current_file:
+        if not disable_headers:
+            start_file_comment = f'{config["merger"]["comment"]} file "{file_name}" '.ljust(
                 int(config["merger"]["separator_length"]),
-                config["merger"]["separator_end"][0],
+                config["merger"]["separator_start"][0],
             )
-        )
-        output_file.write(f"\n\n\n{end_file_comment}\n")
+            output_file.write(f"\n{start_file_comment}\n")
+        for line in current_file.readlines():
+            if ignore_regex or not exclude_line_regex.search(line):
+                output_file.write(line)
+        if not disable_headers:
+            end_file_comment = (
+                f'{config["merger"]["comment"]} end of file "{file_name}" '
+                f"".ljust(
+                    int(config["merger"]["separator_length"]),
+                    config["merger"]["separator_end"][0],
+                )
+            )
+            output_file.write(f"\n\n\n{end_file_comment}\n")
 
 
 def log_values():
@@ -235,15 +242,13 @@ def main():
     with open(output_file_location, "w") as output_file:
         # all of the files, which are not in main, are are not in order
         if header_file is not None:
-            with open(header_file, "r") as current_file:
-                write_to_output_file(
-                    header_file,
-                    current_file,
-                    output_file,
-                    exclude_line_regex,
-                    disable_headers=True,
-                    ignore_regex=True,
-                )
+            write_to_output_file(
+                header_file,
+                output_file,
+                exclude_line_regex,
+                disable_headers=True,
+                ignore_regex=True,
+            )
 
         for f in files_to_watch:
             if f == main_file:
@@ -255,8 +260,9 @@ def main():
             if not file_regex.search(f):
                 continue
 
-            with open(os.path.join(work_dir, f), "r") as current_file:
-                write_to_output_file(f, current_file, output_file, exclude_line_regex)
+            write_to_output_file(
+                os.path.join(work_dir, f), output_file, exclude_line_regex
+            )
 
         # now files that should go in order
         if order is not None:
@@ -264,22 +270,14 @@ def main():
                 if f == main_file:
                     continue
 
-                with open(os.path.join(work_dir, f), "r") as current_file:
-                    write_to_output_file(
-                        f, current_file, output_file, exclude_line_regex
-                    )
+                write_to_output_file(
+                    os.path.join(work_dir, f), output_file, exclude_line_regex
+                )
 
         # Main will always be the last one
-        with open(os.path.join(work_dir, main_file), "r") as current_file:
-            write_to_output_file(
-                main_file,
-                current_file,
-                output_file,
-                exclude_line_regex,
-                disable_headers=True,
-            )
-
-
-if __name__ == "__main__":
-    args = parser.parse_args()
-    main(args)
+        write_to_output_file(
+            os.path.join(work_dir, main_file),
+            output_file,
+            exclude_line_regex,
+            disable_headers=True,
+        )
