@@ -79,19 +79,7 @@ parser.add_argument(
     "line settings)",
 )
 
-config = configparser.ConfigParser(
-    defaults={
-        "output": "codingame.volatile.py",
-        "workdir": "codingame/",
-        "file_regex": ".*",
-        "exclude_line_regex": "^from codingame\.|^import codingame|^from \.|^import \.",
-        "comment": "#",
-        "separator_start": "-",
-        "separator_end": "=",
-        "separator_length": "80",
-    },
-    default_section="merger",
-)
+config = None
 
 
 def check_file_exists(file_path):
@@ -221,7 +209,26 @@ def get_parameters_from_config():
     )
 
 
+def init_config():
+    global config
+    config = configparser.ConfigParser(
+        defaults={
+            "output": "codingame.volatile.py",
+            "workdir": "codingame/",
+            "file_regex": ".*",
+            "exclude_line_regex": "^from codingame\.|^import codingame|^from \.|^import \.",
+            "comment": "#",
+            "separator_start": "-",
+            "separator_end": "=",
+            "separator_length": "80",
+        },
+        default_section="merger",
+    )
+
+
 def main():
+    init_config()
+
     arguments = parser.parse_args()
     if os.path.exists("cgmerger.conf"):
         config.read("cgmerger.conf")
