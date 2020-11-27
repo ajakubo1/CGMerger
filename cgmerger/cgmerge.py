@@ -201,6 +201,53 @@ def copy_parser_arguments_to_config(arguments: Namespace):
         config["merger"]["order"] = arguments.order
 
 
+def get_parameters_from_config():
+    order = None
+    output_file_location = config["merger"]["output"]
+    work_dir = config["merger"]["workdir"]
+    file_regex = re.compile(config["merger"]["file_regex"])
+    exclude_line_regex = re.compile(config["merger"]["exclude_line_regex"])
+    header_file = None
+    footer_file = None
+
+    if "header" in config["merger"]:
+        header_file = config["merger"]["header"]
+
+    if "footer" in config["merger"]:
+        footer_file = config["merger"]["header"]
+
+    if "order" in config["merger"]:
+        order = config["merger"]["order"].split(",")
+
+    check_output_exists()
+    check_workdir_exists()
+
+    if order is not None:
+        for file_name in order:
+            check_is_in_workdir(file_name)
+
+    if header_file is not None:
+        check_header_exists()
+
+    if footer_file is not None:
+        check_header_exists()
+
+    files_to_watch = [
+        f for f in os.listdir(work_dir) if os.path.isfile(os.path.join(work_dir, f))
+    ]
+
+    return (
+        order,
+        output_file_location,
+        work_dir,
+        file_regex,
+        exclude_line_regex,
+        header_file,
+        footer_file,
+        files_to_watch,
+    )
+
+
 def main():
     arguments = parser.parse_args()
     if os.path.exists("cgmerger.conf"):
@@ -227,40 +274,16 @@ def main():
         log_values()
         parser.exit(message="Config file created with listed values")
 
-    check_output_exists()
-
-    check_workdir_exists()
-
-    order = None
-    output_file_location = config["merger"]["output"]
-    work_dir = config["merger"]["workdir"]
-    file_regex = re.compile(config["merger"]["file_regex"])
-    exclude_line_regex = re.compile(config["merger"]["exclude_line_regex"])
-    header_file = None
-    footer_file = None
-
-    if "header" in config["merger"]:
-        header_file = config["merger"]["header"]
-
-    if "footer" in config["merger"]:
-        footer_file = config["merger"]["header"]
-
-    if "order" in config["merger"]:
-        order = config["merger"]["order"].split(",")
-
-    if order is not None:
-        for file_name in order:
-            check_is_in_workdir(file_name)
-
-    if header_file is not None:
-        check_header_exists()
-
-    if footer_file is not None:
-        check_header_exists()
-
-    files_to_watch = [
-        f for f in os.listdir(work_dir) if os.path.isfile(os.path.join(work_dir, f))
-    ]
+    (
+        order,
+        output_file_location,
+        work_dir,
+        file_regex,
+        exclude_line_regex,
+        header_file,
+        footer_file,
+        files_to_watch,
+    ) = get_parameters_from_config()
 
     with open(output_file_location, "w") as output_file:
         # all of the files, which are not in order
