@@ -25,7 +25,12 @@ The script works as following:
 
 The script **does not** create any folders and files on it's own. It checks if
  ``--output`` file exists and inform the user if it doesn't (same thing for ``--workdir``)
- 
+
+## Example/Template project
+
+- ``C#`` sample project: https://github.com/ajakubo1/CGmerger-examples/tree/main/default-csharp
+- ``python`` sample project: https://github.com/ajakubo1/CGmerger-examples/tree/main/default-python
+
 ## Writing a config file
 
 You can write your own config file for the script. In the begining of the run, the
@@ -88,11 +93,6 @@ Header file is optional and when specified - the contents of that file will be a
 What comment character is used in your language  -``#`` for python - the default
  value - if you are using different language, you should specify the corresponding
   comment sign (e.g. ``//`` for Java and C#)
-
-## Example/Template project
-
-- ``C#`` sample project: https://github.com/ajakubo1/CGMerger/tree/main/templates/default-csharp
-- ``python`` sample project: https://github.com/ajakubo1/CGMerger/tree/main/templates/default-python
 
 ## Smart usage
 
