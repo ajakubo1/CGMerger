@@ -147,6 +147,7 @@ def log_values():
     print("file_regex: ", config["merger"].get("file_regex", "none"))
     print("exclude_line_regex: ", config["merger"].get("exclude_line_regex", "none"))
     print("header: ", config["merger"].get("header", "none"))
+    print("footer: ", config["merger"].get("footer", "none"))
     print("comment: ", config["merger"].get("comment", "none"))
     print("separator_start: ", config["merger"].get("separator_start", "none"))
     print("separator_end: ", config["merger"].get("separator_end", "none"))
@@ -186,7 +187,7 @@ def get_parameters_from_config():
         header_file = config["merger"]["header"]
 
     if "footer" in config["merger"]:
-        footer_file = config["merger"]["header"]
+        footer_file = config["merger"]["footer"]
 
     if "order" in config["merger"]:
         order = config["merger"]["order"].split(",")
@@ -199,10 +200,10 @@ def get_parameters_from_config():
             check_file_exists(os.path.join(work_dir, file_name))
 
     if header_file is not None:
-        check_file_exists(header_file)
+        check_file_exists(os.path.join(work_dir, header_file))
 
     if footer_file is not None:
-        check_file_exists(footer_file)
+        check_file_exists(os.path.join(work_dir, footer_file))
 
     files_to_watch = [
         f for f in os.listdir(work_dir) if os.path.isfile(os.path.join(work_dir, f))
@@ -261,7 +262,7 @@ def main():
         # all of the files, which are not in order
         if header_file is not None:
             write_to_output_file(
-                header_file,
+                os.path.join(work_dir, header_file),
                 output_file,
                 exclude_line_regex,
                 disable_headers=True,
@@ -271,12 +272,25 @@ def main():
         # now files that should go in order
         if order is not None:
             for f in order:
+
+                if f == header_file:
+                    continue
+
+                if f == footer_file:
+                    continue
+
                 write_to_output_file(
                     os.path.join(work_dir, f), output_file, exclude_line_regex
                 )
 
         for f in files_to_watch:
             if order is not None and f in order:
+                continue
+
+            if f == header_file:
+                continue
+
+            if f == footer_file:
                 continue
 
             if not file_regex.search(f):
@@ -288,9 +302,8 @@ def main():
 
         if footer_file is not None:
             write_to_output_file(
-                footer_file,
+                os.path.join(work_dir, footer_file),
                 output_file,
                 exclude_line_regex,
                 disable_headers=True,
-                ignore_regex=True,
             )
