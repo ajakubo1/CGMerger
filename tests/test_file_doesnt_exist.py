@@ -21,6 +21,7 @@ class FileDoesntExist(unittest.TestCase):
         args_mock.footer = None
         args_mock.comment = None
         args_mock.order = None
+        args_mock.write = False
         return args_mock
 
     @patch("cgmerger.cgmerge.parser")
