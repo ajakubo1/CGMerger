@@ -248,6 +248,13 @@ def main():
                 ignore_regex=True,
             )
 
+        # now files that should go in order
+        if order is not None:
+            for f in order:
+                write_to_output_file(
+                    os.path.join(work_dir, f), output_file, exclude_line_regex
+                )
+
         for f in files_to_watch:
             if order is not None and f in order:
                 continue
@@ -258,10 +265,3 @@ def main():
             write_to_output_file(
                 os.path.join(work_dir, f), output_file, exclude_line_regex
             )
-
-        # now files that should go in order
-        if order is not None:
-            for f in order:
-                write_to_output_file(
-                    os.path.join(work_dir, f), output_file, exclude_line_regex
-                )
