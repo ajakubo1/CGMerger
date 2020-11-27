@@ -94,43 +94,15 @@ config = configparser.ConfigParser(
 )
 
 
-def in_workdir(file_name: str):
-    return os.path.isdir(os.path.join(config["merger"]["workdir"], file_name))
-
-
-def check_output_exists():
-    if not os.path.exists(config["merger"]["output"]):
-        parser.error(
-            f"No \"{config['merger']['output']}\" file present in {os.getcwd()}"
-        )
-
-
-def check_header_exists():
-    if not os.path.exists(config["merger"]["header"]):
-        parser.error(
-            f"No \"{config['merger']['header']}\" file present in {os.getcwd()}"
-        )
-
-
-def check_footer_exists():
-    if not os.path.exists(config["merger"]["footer"]):
-        parser.error(
-            f"No \"{config['merger']['footer']}\" file present in {os.getcwd()}"
-        )
+def check_file_exists(file_path):
+    if not os.path.exists(file_path):
+        parser.error(f'No "{file_path}" file present in {os.getcwd()}')
 
 
 def check_workdir_exists():
     if not os.path.isdir(config["merger"]["workdir"]):
         parser.error(
             f"No \"{config['merger']['workdir']}\" directory present in {os.getcwd()}"
-        )
-
-
-def check_is_in_workdir(file_name: str):
-    if not in_workdir(file_name):
-        parser.error(
-            f'No "{file_name}" directory present in {os.getcwd()}'
-            f'/{config["merger"]["workdir"]}',
         )
 
 
@@ -219,18 +191,18 @@ def get_parameters_from_config():
     if "order" in config["merger"]:
         order = config["merger"]["order"].split(",")
 
-    check_output_exists()
+    check_file_exists(output_file_location)
     check_workdir_exists()
 
     if order is not None:
         for file_name in order:
-            check_is_in_workdir(file_name)
+            check_file_exists(os.path.join(work_dir, file_name))
 
     if header_file is not None:
-        check_header_exists()
+        check_file_exists(header_file)
 
     if footer_file is not None:
-        check_header_exists()
+        check_file_exists(footer_file)
 
     files_to_watch = [
         f for f in os.listdir(work_dir) if os.path.isfile(os.path.join(work_dir, f))
