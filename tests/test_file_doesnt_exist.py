@@ -72,6 +72,21 @@ class FileDoesntExist(unittest.TestCase):
     @patch("cgmerger.cgmerge.parser")
     @patch("cgmerger.cgmerge.os.path.isfile")
     @patch("cgmerger.cgmerge.os.path.isdir")
+    def test_custom_workdir_doesnt_exist(self, is_dir, path_exists, parser):
+        path_exists.return_value = True
+        is_dir.return_value = False
+        args_mock = self.get_default_args()
+        args_mock.workdir = "very_custom_folder/"
+        parser.error = self.raise_exception
+        parser.parse_args.return_value = args_mock
+        with self.assertRaisesRegex(
+            TestException, f'No "{args_mock.workdir}" directory present in '
+        ):
+            main()
+
+    @patch("cgmerger.cgmerge.parser")
+    @patch("cgmerger.cgmerge.os.path.isfile")
+    @patch("cgmerger.cgmerge.os.path.isdir")
     @patch("cgmerger.cgmerge.os.listdir")
     @patch("cgmerger.cgmerge.open")
     def test_create_default_output(self, open, listdir, is_dir, path_exists, parser):
