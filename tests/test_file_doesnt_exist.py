@@ -1,4 +1,5 @@
 import unittest
+from typing import Dict
 from unittest.mock import patch, Mock
 from cgmerger.cgmerge import main
 
@@ -9,6 +10,13 @@ class TestException(Exception):
 
 class TestExitException(Exception):
     pass
+
+
+def path_exists_wrapper(paths: Dict[str, bool]):
+    def real_path_exists(path: str):
+        return paths.get(path, False)
+
+    return real_path_exists
 
 
 class FileDoesntExist(unittest.TestCase):
@@ -31,12 +39,6 @@ class FileDoesntExist(unittest.TestCase):
         args_mock.write = False
         args_mock.debug = False
         return args_mock
-
-    def path_exists_wrapper(self, **kwargs):
-        def real_path_exists(path: str):
-            return kwargs.get(path, False)
-
-        return real_path_exists
 
     def get_default_setup(self, parser):
         args_mock = self.get_default_args()
@@ -116,3 +118,23 @@ class FileDoesntExist(unittest.TestCase):
         self.get_default_setup(parser)
         main()
         open.assert_called_once_with("codingame.volatile.py", "w")
+
+    @patch(
+        "cgmerger.cgmerge.os.path.isfile",
+        new=path_exists_wrapper(
+            {
+                "codingame.volatile.py": True,
+                "codingame/quite_interesting_header_file.py": False,
+            }
+        ),
+    )
+    @patch("cgmerger.cgmerge.parser")
+    @patch("cgmerger.cgmerge.os.path.isdir")
+    def test_add_header_file_doesnt_exist(self, is_dir, parser):
+        is_dir.return_value = True
+        args_mock, _ = self.get_default_setup(parser)
+        args_mock.header = "quite_interesting_header_file.py"
+        with self.assertRaisesRegex(
+            TestException, f'No "codingame/{args_mock.header}" file present in '
+        ):
+            main()
