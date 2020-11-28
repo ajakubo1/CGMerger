@@ -7,9 +7,16 @@ class TestException(Exception):
     pass
 
 
+class TestExitException(Exception):
+    pass
+
+
 class FileDoesntExist(unittest.TestCase):
     def raise_exception(self, message):
         raise TestException(message)
+
+    def raise_exit_exception(self, message):
+        raise TestExitException(message)
 
     def get_default_args(self):
         args_mock = Mock()
@@ -22,6 +29,7 @@ class FileDoesntExist(unittest.TestCase):
         args_mock.comment = None
         args_mock.order = None
         args_mock.write = False
+        args_mock.debug = False
         return args_mock
 
     def path_exists_wrapper(self, **kwargs):
@@ -32,10 +40,25 @@ class FileDoesntExist(unittest.TestCase):
 
     @patch("cgmerger.cgmerge.parser")
     @patch("cgmerger.cgmerge.os.path.exists")
+    def test_debug_printout(self, path_exists, parser):
+        path_exists.return_value = False
+        args_mock = self.get_default_args()
+        args_mock.debug = True
+        parser.error = self.raise_exception
+        parser.exit = self.raise_exit_exception
+        parser.parse_args.return_value = args_mock
+        with self.assertRaisesRegex(
+            TestExitException, "No further operations will be performed"
+        ):
+            main()
+
+    @patch("cgmerger.cgmerge.parser")
+    @patch("cgmerger.cgmerge.os.path.exists")
     def test_default_output_file_doesnt_exist(self, path_exists, parser):
         path_exists.return_value = False
         args_mock = self.get_default_args()
         parser.error = self.raise_exception
+        parser.exit = self.raise_exit_exception
         parser.parse_args.return_value = args_mock
         with self.assertRaisesRegex(
             TestException, 'No "codingame.volatile.py" file present in '
@@ -49,6 +72,7 @@ class FileDoesntExist(unittest.TestCase):
         args_mock = self.get_default_args()
         args_mock.output = "very_custom_file.py"
         parser.error = self.raise_exception
+        parser.exit = self.raise_exit_exception
         parser.parse_args.return_value = args_mock
         with self.assertRaisesRegex(
             TestException, f'No "{args_mock.output}" file present in '
@@ -63,6 +87,7 @@ class FileDoesntExist(unittest.TestCase):
         is_dir.return_value = False
         args_mock = self.get_default_args()
         parser.error = self.raise_exception
+        parser.exit = self.raise_exit_exception
         parser.parse_args.return_value = args_mock
         with self.assertRaisesRegex(
             TestException, 'No "codingame/" directory present in '
@@ -78,6 +103,7 @@ class FileDoesntExist(unittest.TestCase):
         args_mock = self.get_default_args()
         args_mock.workdir = "very_custom_folder/"
         parser.error = self.raise_exception
+        parser.exit = self.raise_exit_exception
         parser.parse_args.return_value = args_mock
         with self.assertRaisesRegex(
             TestException, f'No "{args_mock.workdir}" directory present in '
@@ -95,6 +121,7 @@ class FileDoesntExist(unittest.TestCase):
         listdir.return_value = []
         args_mock = self.get_default_args()
         parser.error = self.raise_exception
+        parser.exit = self.raise_exit_exception
         parser.parse_args.return_value = args_mock
         main()
         open.assert_called_once_with("codingame.volatile.py", "w")
