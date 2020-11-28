@@ -79,23 +79,11 @@ parser.add_argument(
     "line settings)",
 )
 
-config = configparser.ConfigParser(
-    defaults={
-        "output": "codingame.volatile.py",
-        "workdir": "codingame/",
-        "file_regex": ".*",
-        "exclude_line_regex": "^from codingame\.|^import codingame|^from \.|^import \.",
-        "comment": "#",
-        "separator_start": "-",
-        "separator_end": "=",
-        "separator_length": "80",
-    },
-    default_section="merger",
-)
+config = None
 
 
 def check_file_exists(file_path):
-    if not os.path.exists(file_path):
+    if not os.path.isfile(file_path):
         parser.error(f'No "{file_path}" file present in {os.getcwd()}')
 
 
@@ -167,9 +155,15 @@ def copy_parser_arguments_to_config(arguments: Namespace):
     if arguments.header is not None:
         config["merger"]["header"] = arguments.header
     if arguments.footer is not None:
-        config["merger"]["footer"] = arguments.header
+        config["merger"]["footer"] = arguments.footer
     if arguments.comment is not None:
         config["merger"]["comment"] = arguments.comment
+    if arguments.separator_start is not None:
+        config["merger"]["separator_start"] = arguments.separator_start
+    if arguments.separator_end is not None:
+        config["merger"]["separator_end"] = arguments.separator_end
+    if arguments.separator_length is not None:
+        config["merger"]["separator_length"] = arguments.separator_length
     if arguments.order is not None:
         config["merger"]["order"] = arguments.order
 
@@ -221,7 +215,26 @@ def get_parameters_from_config():
     )
 
 
+def init_config():
+    global config
+    config = configparser.ConfigParser(
+        defaults={
+            "output": "codingame.volatile.py",
+            "workdir": "codingame/",
+            "file_regex": ".*",
+            "exclude_line_regex": "^from codingame\.|^import codingame|^from \.|^import \.",
+            "comment": "#",
+            "separator_start": "-",
+            "separator_end": "=",
+            "separator_length": "80",
+        },
+        default_section="merger",
+    )
+
+
 def main():
+    init_config()
+
     arguments = parser.parse_args()
     if os.path.exists("cgmerger.conf"):
         config.read("cgmerger.conf")
@@ -299,7 +312,6 @@ def main():
             write_to_output_file(
                 os.path.join(work_dir, f), output_file, exclude_line_regex
             )
-
         if footer_file is not None:
             write_to_output_file(
                 os.path.join(work_dir, footer_file),
