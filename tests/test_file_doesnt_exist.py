@@ -500,3 +500,53 @@ class FileDoesntExist(unittest.TestCase):
                 call().write('\n\n\n// end of file "codingame/one.cs" ******\n'),
             ],
         )
+
+    @patch("cgmerger.cgmerge.parser")
+    @patch("cgmerger.cgmerge.os.path.isfile")
+    @patch("cgmerger.cgmerge.os.path.isdir")
+    @patch("cgmerger.cgmerge.os.path.getsize")
+    @patch("cgmerger.cgmerge.os.listdir")
+    @patch("cgmerger.cgmerge.chardet.detect")
+    def test_exclude_content(
+        self, detect, listdir, getsize, is_dir, path_exists, parser
+    ):
+        open = mock_open(
+            Mock(),
+            read_data="using System;\nusing System.Linq;\nstatic void Main(string[] args)",
+        )
+        detect.return_value = {"encoding": "utf-8"}
+        getsize.return_value = 1
+        path_exists.return_value = True
+        is_dir.return_value = True
+        listdir.return_value = ["one.cs"]
+        args_mock, _ = self.get_default_setup(parser)
+        args_mock.exclude_line_regex = "^using"
+        args_mock.output = "codingame.volatile.cs"
+        args_mock.comment = "//"
+        with patch("cgmerger.cgmerge.open", open):
+            main()
+
+        calls = list(
+            filter(
+                lambda line: line != call().__enter__()
+                and line != call().__exit__(None, None, None)
+                and line != call().read(1)
+                and line != call().readlines(),
+                open.mock_calls,
+            )
+        )
+        self.assertListEqual(
+            calls,
+            [
+                call("codingame.volatile.cs", "w"),
+                call("codingame/one.cs", "rb"),
+                call("codingame/one.cs", "r", encoding="utf-8"),
+                call().write(
+                    '\n// file "codingame/one.cs" -----------------------------------------------------\n'
+                ),
+                call().write("static void Main(string[] args)"),
+                call().write(
+                    '\n\n\n// end of file "codingame/one.cs" ==============================================\n'
+                ),
+            ],
+        )
