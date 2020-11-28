@@ -158,6 +158,12 @@ def copy_parser_arguments_to_config(arguments: Namespace):
         config["merger"]["footer"] = arguments.footer
     if arguments.comment is not None:
         config["merger"]["comment"] = arguments.comment
+    if arguments.separator_start is not None:
+        config["merger"]["separator_start"] = arguments.separator_start
+    if arguments.separator_end is not None:
+        config["merger"]["separator_end"] = arguments.separator_end
+    if arguments.separator_length is not None:
+        config["merger"]["separator_length"] = arguments.separator_length
     if arguments.order is not None:
         config["merger"]["order"] = arguments.order
 
