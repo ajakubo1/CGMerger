@@ -80,7 +80,7 @@ class FileDoesntExist(unittest.TestCase):
         args_mock, _ = self.get_default_setup(parser)
         args_mock.output = "very_custom_file.py"
         with self.assertRaisesRegex(
-            TestException, f'No "{args_mock.output}" file present in '
+            TestException, f'No "{args_mock.output}" file present in '  # noqa: E999
         ):
             main()
 
@@ -105,7 +105,8 @@ class FileDoesntExist(unittest.TestCase):
         args_mock, _ = self.get_default_setup(parser)
         args_mock.workdir = "very_custom_folder/"
         with self.assertRaisesRegex(
-            TestException, f'No "{args_mock.workdir}" directory present in '
+            TestException,
+            f'No "{args_mock.workdir}" directory present in ',  # noqa: E999
         ):
             main()
 
@@ -138,7 +139,8 @@ class FileDoesntExist(unittest.TestCase):
         args_mock, _ = self.get_default_setup(parser)
         args_mock.header = "quite_interesting_header_file.py"
         with self.assertRaisesRegex(
-            TestException, f'No "codingame/{args_mock.header}" file present in '
+            TestException,
+            f'No "codingame/{args_mock.header}" file present in ',  # noqa: E999
         ):
             main()
 
@@ -187,7 +189,8 @@ class FileDoesntExist(unittest.TestCase):
         args_mock, _ = self.get_default_setup(parser)
         args_mock.footer = "quite_interesting_footer_file.py"
         with self.assertRaisesRegex(
-            TestException, f'No "codingame/{args_mock.footer}" file present in '
+            TestException,
+            f'No "codingame/{args_mock.footer}" file present in ',  # noqa: E999
         ):
             main()
 
