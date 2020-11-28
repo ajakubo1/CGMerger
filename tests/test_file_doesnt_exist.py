@@ -1,6 +1,6 @@
 import unittest
 from typing import Dict
-from unittest.mock import patch, Mock, call
+from unittest.mock import patch, Mock, call, mock_open
 from cgmerger.cgmerge import main
 
 
@@ -61,7 +61,7 @@ class FileDoesntExist(unittest.TestCase):
             main()
 
     @patch("cgmerger.cgmerge.parser")
-    @patch("cgmerger.cgmerge.os.path.exists")
+    @patch("cgmerger.cgmerge.os.path.isfile")
     def test_default_output_file_doesnt_exist(self, path_exists, parser):
         path_exists.return_value = False
         self.get_default_setup(parser)
@@ -222,23 +222,31 @@ class FileDoesntExist(unittest.TestCase):
     @patch("cgmerger.cgmerge.os.path.isdir")
     @patch("cgmerger.cgmerge.os.path.getsize")
     @patch("cgmerger.cgmerge.os.listdir")
-    @patch("cgmerger.cgmerge.open")
     @patch("cgmerger.cgmerge.chardet.detect")
-    def test_add_file(
-        self, detect, open, listdir, getsize, is_dir, path_exists, parser
-    ):
+    def test_add_file(self, detect, listdir, getsize, is_dir, path_exists, parser):
+        open = mock_open(Mock(), read_data="One\nTwo\nThree")
         detect.return_value = {"encoding": "utf-8"}
         getsize.return_value = 1
         path_exists.return_value = True
         is_dir.return_value = True
         listdir.return_value = ["merge_me.py"]
         self.get_default_setup(parser)
-        main()
+        with patch("cgmerger.cgmerge.open", open):
+            main()
         open.assert_has_calls(
             [
                 call("codingame.volatile.py", "w"),
                 call("codingame/merge_me.py", "rb"),
                 call("codingame/merge_me.py", "r", encoding="utf-8"),
+                call().write(
+                    '\n# file "codingame/merge_me.py" -------------------------------------------------\n'
+                ),
+                call().write("One\n"),
+                call().write("Two\n"),
+                call().write("Three"),
+                call().write(
+                    '\n\n\n# end of file "codingame/merge_me.py" ==========================================\n'
+                ),
             ],
             any_order=True,
         )
