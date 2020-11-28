@@ -167,3 +167,23 @@ class FileDoesntExist(unittest.TestCase):
             ],
             any_order=True,
         )
+
+    @patch(
+        "cgmerger.cgmerge.os.path.isfile",
+        new=path_exists_wrapper(
+            {
+                "codingame.volatile.py": True,
+                "codingame/quite_interesting_footer_file.py": False,
+            }
+        ),
+    )
+    @patch("cgmerger.cgmerge.parser")
+    @patch("cgmerger.cgmerge.os.path.isdir")
+    def test_add_footer_file_doesnt_exist(self, is_dir, parser):
+        is_dir.return_value = True
+        args_mock, _ = self.get_default_setup(parser)
+        args_mock.footer = "quite_interesting_footer_file.py"
+        with self.assertRaisesRegex(
+            TestException, f'No "codingame/{args_mock.footer}" file present in '
+        ):
+            main()
