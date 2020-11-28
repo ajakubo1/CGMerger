@@ -356,3 +356,61 @@ class FileDoesntExist(unittest.TestCase):
                 call().write("Three"),
             ],
         )
+
+    @patch("cgmerger.cgmerge.parser")
+    @patch("cgmerger.cgmerge.os.path.isfile")
+    @patch("cgmerger.cgmerge.os.path.isdir")
+    @patch("cgmerger.cgmerge.os.path.getsize")
+    @patch("cgmerger.cgmerge.os.listdir")
+    @patch("cgmerger.cgmerge.chardet.detect")
+    def test_footer_header_files(
+        self, detect, listdir, getsize, is_dir, path_exists, parser
+    ):
+        open = mock_open(Mock(), read_data="One\nTwo\nThree")
+        detect.return_value = {"encoding": "utf-8"}
+        getsize.return_value = 1
+        path_exists.return_value = True
+        is_dir.return_value = True
+        listdir.return_value = ["one.py", "two.py", "three.py"]
+        args_mock, _ = self.get_default_setup(parser)
+        args_mock.header = "three.py"
+        args_mock.footer = "one.py"
+        with patch("cgmerger.cgmerge.open", open):
+            main()
+
+        calls = list(
+            filter(
+                lambda line: line != call().__enter__()
+                and line != call().__exit__(None, None, None)
+                and line != call().read(1)
+                and line != call().readlines(),
+                open.mock_calls,
+            )
+        )
+        self.assertListEqual(
+            calls,
+            [
+                call("codingame.volatile.py", "w"),
+                call("codingame/three.py", "rb"),
+                call("codingame/three.py", "r", encoding="utf-8"),
+                call().write("One\n"),
+                call().write("Two\n"),
+                call().write("Three"),
+                call("codingame/two.py", "rb"),
+                call("codingame/two.py", "r", encoding="utf-8"),
+                call().write(
+                    '\n# file "codingame/two.py" ------------------------------------------------------\n'
+                ),
+                call().write("One\n"),
+                call().write("Two\n"),
+                call().write("Three"),
+                call().write(
+                    '\n\n\n# end of file "codingame/two.py" ===============================================\n'
+                ),
+                call("codingame/one.py", "rb"),
+                call("codingame/one.py", "r", encoding="utf-8"),
+                call().write("One\n"),
+                call().write("Two\n"),
+                call().write("Three"),
+            ],
+        )
