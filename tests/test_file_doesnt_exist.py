@@ -250,3 +250,36 @@ class FileDoesntExist(unittest.TestCase):
             ],
             any_order=True,
         )
+
+    @patch("cgmerger.cgmerge.parser")
+    @patch("cgmerger.cgmerge.os.path.isfile")
+    @patch("cgmerger.cgmerge.os.path.isdir")
+    @patch("cgmerger.cgmerge.os.path.getsize")
+    @patch("cgmerger.cgmerge.os.listdir")
+    @patch("cgmerger.cgmerge.open")
+    @patch("cgmerger.cgmerge.chardet.detect")
+    def test_add_header(
+        self, detect, open, listdir, getsize, is_dir, path_exists, parser
+    ):
+        detect.return_value = {"encoding": "utf-8"}
+        getsize.return_value = 1
+        path_exists.return_value = True
+        is_dir.return_value = True
+        listdir.return_value = []
+        self.get_default_setup(parser)
+        args_mock, _ = self.get_default_setup(parser)
+        args_mock.order = "one.py,two.py,three.py"
+
+        main()
+        open.assert_has_calls(
+            [
+                call("codingame.volatile.py", "w"),
+                call("codingame/one.py", "rb"),
+                call("codingame/one.py", "r", encoding="utf-8"),
+                call("codingame/two.py", "rb"),
+                call("codingame/two.py", "r", encoding="utf-8"),
+                call("codingame/three.py", "rb"),
+                call("codingame/three.py", "r", encoding="utf-8"),
+            ],
+            any_order=True,
+        )
