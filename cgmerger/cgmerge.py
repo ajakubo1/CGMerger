@@ -312,7 +312,6 @@ def main():
             write_to_output_file(
                 os.path.join(work_dir, f), output_file, exclude_line_regex
             )
-
         if footer_file is not None:
             write_to_output_file(
                 os.path.join(work_dir, footer_file),
