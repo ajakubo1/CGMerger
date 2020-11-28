@@ -155,7 +155,7 @@ def copy_parser_arguments_to_config(arguments: Namespace):
     if arguments.header is not None:
         config["merger"]["header"] = arguments.header
     if arguments.footer is not None:
-        config["merger"]["footer"] = arguments.header
+        config["merger"]["footer"] = arguments.footer
     if arguments.comment is not None:
         config["merger"]["comment"] = arguments.comment
     if arguments.order is not None:
