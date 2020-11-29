@@ -84,13 +84,15 @@ config = None
 
 def check_file_exists(file_path):
     if not os.path.isfile(file_path):
-        parser.error(f'No "{file_path}" file present in {os.getcwd()}')  # noqa: E999
+        parser.error('No "{}" file present in {}'.format(file_path, os.getcwd()))
 
 
 def check_workdir_exists():
     if not os.path.isdir(config["merger"]["workdir"]):
         parser.error(
-            f"No \"{config['merger']['workdir']}\" directory present in {os.getcwd()}"
+            'No "{}" directory present in {}'.format(
+                config["merger"]["workdir"], os.getcwd()
+            )
         )
 
 
@@ -108,23 +110,24 @@ def write_to_output_file(
 
     with open(file_name, "r", encoding=encoding) as current_file:
         if not disable_headers:
-            start_file_comment = f'{config["merger"]["comment"]} file "{file_name}" '.ljust(
+            start_file_comment = '{} file "{}" '.format(
+                config["merger"]["comment"], file_name
+            ).ljust(
                 int(config["merger"]["separator_length"]),
                 config["merger"]["separator_start"][0],
             )
-            output_file.write(f"\n{start_file_comment}\n")
+            output_file.write("\n{}\n".format(start_file_comment))
         for line in current_file.readlines():
             if ignore_regex or not exclude_line_regex.search(line):
                 output_file.write(line)
         if not disable_headers:
-            end_file_comment = (
-                f'{config["merger"]["comment"]} end of file "{file_name}" '
-                f"".ljust(
-                    int(config["merger"]["separator_length"]),
-                    config["merger"]["separator_end"][0],
-                )
+            end_file_comment = '{} end of file "{}" '.format(
+                config["merger"]["comment"], file_name
+            ).ljust(
+                int(config["merger"]["separator_length"]),
+                config["merger"]["separator_end"][0],
             )
-            output_file.write(f"\n\n\n{end_file_comment}\n")
+            output_file.write("\n\n\n{}\n".format(end_file_comment))
 
 
 def log_values():
