@@ -96,7 +96,9 @@ def check_file_exists(file_path):
 
 
 def check_workdir_exists():
-    if not os.path.isdir(config["merger"]["workdir"]):
+    if not os.path.isdir(
+        os.path.join(config["merger"]["basedir"], config["merger"]["workdir"])
+    ):
         parser.error(
             'No "{}" directory present in {}'.format(
                 config["merger"]["workdir"], config["merger"]["basedir"]
@@ -202,7 +204,7 @@ def get_parameters_from_config():
     if "order" in config["merger"]:
         order = config["merger"]["order"].split(",")
 
-    check_file_exists(output_file_location)
+    check_file_exists(os.path.join(base_dir, output_file_location))
     check_workdir_exists()
 
     if order is not None:

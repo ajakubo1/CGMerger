@@ -70,7 +70,7 @@ class FileDoesntExist(unittest.TestCase):
         path_exists.return_value = False
         self.get_default_setup(parser)
         with self.assertRaisesRegex(
-            TestException, 'No "codingame.volatile.py" file present in '
+            TestException, 'No "./codingame.volatile.py" file present in '
         ):
             main()
 
@@ -82,7 +82,9 @@ class FileDoesntExist(unittest.TestCase):
         args_mock.basedir = "/one/two/three/"
         with self.assertRaisesRegex(
             TestException,
-            'No "codingame.volatile.py" file present in {}'.format(args_mock.basedir),
+            'No "{}codingame.volatile.py" file present in {}'.format(
+                args_mock.basedir, args_mock.basedir
+            ),
         ):
             main()
 
@@ -93,7 +95,7 @@ class FileDoesntExist(unittest.TestCase):
         args_mock, _ = self.get_default_setup(parser)
         args_mock.output = "very_custom_file.py"
         with self.assertRaisesRegex(
-            TestException, 'No "{}" file present in '.format(args_mock.output)
+            TestException, 'No "./{}" file present in '.format(args_mock.output)
         ):
             main()
 
@@ -139,8 +141,8 @@ class FileDoesntExist(unittest.TestCase):
         "cgmerger.cgmerge.os.path.isfile",
         new=path_exists_wrapper(
             {
-                "codingame.volatile.py": True,
-                "codingame/quite_interesting_header_file.py": False,
+                "./codingame.volatile.py": True,
+                "./codingame/quite_interesting_header_file.py": False,
             }
         ),
     )
@@ -191,8 +193,8 @@ class FileDoesntExist(unittest.TestCase):
         "cgmerger.cgmerge.os.path.isfile",
         new=path_exists_wrapper(
             {
-                "codingame.volatile.py": True,
-                "codingame/quite_interesting_footer_file.py": False,
+                "./codingame.volatile.py": True,
+                "./codingame/quite_interesting_footer_file.py": False,
             }
         ),
     )
