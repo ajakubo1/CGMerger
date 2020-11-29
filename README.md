@@ -1,12 +1,13 @@
 # CGMerger
-CodinGame Merger (merges files from a folder into one file served by Coding Game
+CodinGame Merger (merges files from a folder into one file served by ``CodinGame``
  web plugin)
 
 ## Installation
 
-Simply run ``pip install cgmerger``. Make sure before that you have ``python3`` 
-installed (at least version ``3.5``). You can also install it by downloading the
- package from ``github`` and running ``pip install <folder where CGMerger is located>``
+1. Make sure before that you have ``python3`` installed (at least version ``3.5``)
+2. Run ``pip install cgmerger``
+3. (alternative for 2.) You can also install it by downloading the package from 
+ ``github`` and running ``pip install <folder where CGMerger is located>``
 
 ## Running the script
 
@@ -16,11 +17,13 @@ After installation, the script can be run by simply typing ``cgmerger`` command 
 ## Example/Template project
 
 Because the tool setup is not trivial, I've created a couple of sample projects that
- should help anyone out with starting with the project. Simply copy the example
-  folder from those languages and you should be able to use the script:
+should help anyone out with starting with the project. Simply copy the example folder
+from those languages and you should be able to use the script:
 
 - ``C#`` sample project: https://github.com/ajakubo1/CGmerger-examples/tree/main/default-csharp
 - ``python`` sample project: https://github.com/ajakubo1/CGmerger-examples/tree/main/default-python
+
+Please - share your successful setup of the script by opening a PR to https://github.com/ajakubo1/CGmerger-examples/
 
 ## How to use it automatically with IDE?
 
@@ -29,35 +32,35 @@ I use the script with ``PyCharm``. I define a new file watcher that is using
 
 ## How does it all work?
 
-The script works as follows:
+The script works in general as follows:
 1. It searches all of the files in folder specified by ``--workdir`` argument (by
  default, that folder is ``codingame``)
 2. It takes all of the file names from that folder, filtered by ``--file-regex`` 
-argument (by default, it's ``.*`` - it matches every file in ``workdir`` folder). It
- **does not** search other folders in ``workdir`` folder.
-3. It copies the contents of all of the matched files, excluding lines matched by 
+argument (by default ``.*`` - every file in ``workdir`` folder). It 
+**does not** search folders in ``workdir`` folder.
+3. It copies the contents of all of the found files, excluding lines matched by 
 ``--exclude-line-regex`` into single ``--output`` file in directory where the script
  runs (by default the file is named ``codingame.volatile.py``)
 
 The script **does not** create any folders and files on it's own. It checks if
- ``--output`` file exists and informs the user if it doesn't (same thing for
-  ``--workdir``). This is as intended - I do not want to mess with project file
-   structure, I only touch files that actually exist.
+``--output`` file exists and informs the user if it doesn't (same thing for
+``--workdir``). This is as intended - I do not want to mess with project file
+structure, I only touch files that actually exist.
 
 ## Writing a config file
 
-You can write your own config file for the script. In the beginning of the run, the
- script will search for ``cgmerger.conf`` file and reads the configuration from it
- . You can still override the values provided by that script by specifying arguments
-  in command line.
+You can write your own config file for a project. In the beginning of the run, the
+script will search for ``cgmerger.conf`` file and reads the configuration from it. 
+You can still override the values provided by that script by specifying arguments
+in command line.
   
-Instead of writing your own ``cgmerger.conf``, you can simply run the ``cgmerger
- --write`` command. This will create a ``cgmerger.conf`` from currently
-  loaded (probably default) settings. Next time you run the script, you don't have to
-   specify any arguments in the command line, settings from that file will be loaded.
+Instead of writing your own ``cgmerger.conf``, you can simply run the 
+``cgmerger --write`` command. This will create a ``cgmerger.conf`` from currently
+loaded (probably default) settings. Next time you run the script, you don't have to
+specify any arguments in the command line, settings from that file will be loaded.
 
 For examples of config file, refer to https://github.com/ajakubo1/CGmerger-examples
- project (you will find there example settings for a ``C#`` and ``python``)
+project (you will find there example settings for a ``C#`` and ``python``)
 
 ## Parameters
 
