@@ -105,18 +105,19 @@ def check_workdir_exists():
 
 
 def write_to_output_file(
+    file_location,
     file_name,
     output_file,
     exclude_line_regex,
     disable_headers=False,
     ignore_regex=False,
 ):
-    bytes = min(32, os.path.getsize(file_name))
-    with open(file_name, "rb") as byte_file:
+    bytes = min(32, os.path.getsize(file_location))
+    with open(file_location, "rb") as byte_file:
         raw = byte_file.read(bytes)
         encoding = chardet.detect(raw)["encoding"]
 
-    with open(file_name, "r", encoding=encoding) as current_file:
+    with open(file_location, "r", encoding=encoding) as current_file:
         if not disable_headers:
             start_file_comment = '{} file "{}" '.format(
                 config["merger"]["comment"], file_name
@@ -190,6 +191,7 @@ def get_parameters_from_config():
     exclude_line_regex = re.compile(config["merger"]["exclude_line_regex"])
     header_file = None
     footer_file = None
+    base_dir = config["merger"]["basedir"]
 
     if "header" in config["merger"]:
         header_file = config["merger"]["header"]
@@ -205,16 +207,18 @@ def get_parameters_from_config():
 
     if order is not None:
         for file_name in order:
-            check_file_exists(os.path.join(work_dir, file_name))
+            check_file_exists(os.path.join(base_dir, work_dir, file_name))
 
     if header_file is not None:
-        check_file_exists(os.path.join(work_dir, header_file))
+        check_file_exists(os.path.join(base_dir, work_dir, header_file))
 
     if footer_file is not None:
-        check_file_exists(os.path.join(work_dir, footer_file))
+        check_file_exists(os.path.join(base_dir, work_dir, footer_file))
 
     files_to_watch = [
-        f for f in os.listdir(work_dir) if os.path.isfile(os.path.join(work_dir, f))
+        f
+        for f in os.listdir(work_dir)
+        if os.path.isfile(os.path.join(base_dir, work_dir, f))
     ]
 
     return (
@@ -226,6 +230,7 @@ def get_parameters_from_config():
         header_file,
         footer_file,
         files_to_watch,
+        base_dir,
     )
 
 
@@ -251,7 +256,10 @@ def main():
     init_config()
 
     arguments = parser.parse_args()
-    if os.path.exists("cgmerger.conf"):
+    base_dir = "./"
+    if arguments.basedir is not None:
+        base_dir = arguments.basedir
+    if os.path.exists(os.path.join(base_dir, "cgmerger.conf")):
         config.read("cgmerger.conf")
     else:
         print("")
@@ -284,12 +292,14 @@ def main():
         header_file,
         footer_file,
         files_to_watch,
+        base_dir,
     ) = get_parameters_from_config()
 
-    with open(output_file_location, "w") as output_file:
+    with open(os.path.join(base_dir, output_file_location), "w") as output_file:
         # all of the files, which are not in order
         if header_file is not None:
             write_to_output_file(
+                os.path.join(base_dir, work_dir, header_file),
                 os.path.join(work_dir, header_file),
                 output_file,
                 exclude_line_regex,
@@ -308,7 +318,10 @@ def main():
                     continue
 
                 write_to_output_file(
-                    os.path.join(work_dir, f), output_file, exclude_line_regex
+                    os.path.join(base_dir, work_dir, f),
+                    os.path.join(work_dir, f),
+                    output_file,
+                    exclude_line_regex,
                 )
 
         for f in files_to_watch:
@@ -325,10 +338,14 @@ def main():
                 continue
 
             write_to_output_file(
-                os.path.join(work_dir, f), output_file, exclude_line_regex
+                os.path.join(base_dir, work_dir, f),
+                os.path.join(work_dir, f),
+                output_file,
+                exclude_line_regex,
             )
         if footer_file is not None:
             write_to_output_file(
+                os.path.join(base_dir, work_dir, footer_file),
                 os.path.join(work_dir, footer_file),
                 output_file,
                 exclude_line_regex,

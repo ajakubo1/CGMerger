@@ -32,7 +32,7 @@ class FileDoesntExist(unittest.TestCase):
         args_mock.exclude_line_regex = None
         args_mock.output = None
         args_mock.workdir = None
-        args_mock.basedir = None
+        args_mock.basedir = "./"
         args_mock.header = None
         args_mock.footer = None
         args_mock.comment = None
@@ -133,7 +133,7 @@ class FileDoesntExist(unittest.TestCase):
         listdir.return_value = []
         self.get_default_setup(parser)
         main()
-        open.assert_called_once_with("codingame.volatile.py", "w")
+        open.assert_called_once_with("./codingame.volatile.py", "w")
 
     @patch(
         "cgmerger.cgmerge.os.path.isfile",
@@ -151,7 +151,8 @@ class FileDoesntExist(unittest.TestCase):
         args_mock, _ = self.get_default_setup(parser)
         args_mock.header = "quite_interesting_header_file.py"
         with self.assertRaisesRegex(
-            TestException, 'No "codingame/{}" file present in '.format(args_mock.header)
+            TestException,
+            'No "./codingame/{}" file present in '.format(args_mock.header),
         ):
             main()
 
@@ -175,10 +176,12 @@ class FileDoesntExist(unittest.TestCase):
         main()
         open.assert_has_calls(
             [
-                call("codingame.volatile.py", "w"),
-                call("codingame/quite_interesting_header_file.py", "rb"),
+                call("./codingame.volatile.py", "w"),
+                call("./codingame/quite_interesting_header_file.py", "rb"),
                 call(
-                    "codingame/quite_interesting_header_file.py", "r", encoding="utf-8"
+                    "./codingame/quite_interesting_header_file.py",
+                    "r",
+                    encoding="utf-8",
                 ),
             ],
             any_order=True,
@@ -200,7 +203,8 @@ class FileDoesntExist(unittest.TestCase):
         args_mock, _ = self.get_default_setup(parser)
         args_mock.footer = "quite_interesting_footer_file.py"
         with self.assertRaisesRegex(
-            TestException, 'No "codingame/{}" file present in '.format(args_mock.footer)
+            TestException,
+            'No "./codingame/{}" file present in '.format(args_mock.footer),
         ):
             main()
 
@@ -224,10 +228,12 @@ class FileDoesntExist(unittest.TestCase):
         main()
         open.assert_has_calls(
             [
-                call("codingame.volatile.py", "w"),
-                call("codingame/quite_interesting_footer_file.py", "rb"),
+                call("./codingame.volatile.py", "w"),
+                call("./codingame/quite_interesting_footer_file.py", "rb"),
                 call(
-                    "codingame/quite_interesting_footer_file.py", "r", encoding="utf-8"
+                    "./codingame/quite_interesting_footer_file.py",
+                    "r",
+                    encoding="utf-8",
                 ),
             ],
             any_order=True,
@@ -251,9 +257,9 @@ class FileDoesntExist(unittest.TestCase):
             main()
         open.assert_has_calls(
             [
-                call("codingame.volatile.py", "w"),
-                call("codingame/merge_me.py", "rb"),
-                call("codingame/merge_me.py", "r", encoding="utf-8"),
+                call("./codingame.volatile.py", "w"),
+                call("./codingame/merge_me.py", "rb"),
+                call("./codingame/merge_me.py", "r", encoding="utf-8"),
                 call().write(
                     '\n# file "codingame/merge_me.py" -------------------------------------------------\n'
                 ),
@@ -289,13 +295,13 @@ class FileDoesntExist(unittest.TestCase):
         main()
         open.assert_has_calls(
             [
-                call("codingame.volatile.py", "w"),
-                call("codingame/one.py", "rb"),
-                call("codingame/one.py", "r", encoding="utf-8"),
-                call("codingame/two.py", "rb"),
-                call("codingame/two.py", "r", encoding="utf-8"),
-                call("codingame/three.py", "rb"),
-                call("codingame/three.py", "r", encoding="utf-8"),
+                call("./codingame.volatile.py", "w"),
+                call("./codingame/one.py", "rb"),
+                call("./codingame/one.py", "r", encoding="utf-8"),
+                call("./codingame/two.py", "rb"),
+                call("./codingame/two.py", "r", encoding="utf-8"),
+                call("./codingame/three.py", "rb"),
+                call("./codingame/three.py", "r", encoding="utf-8"),
             ],
             any_order=True,
         )
@@ -334,14 +340,14 @@ class FileDoesntExist(unittest.TestCase):
         self.assertListEqual(
             calls,
             [
-                call("codingame.volatile.py", "w"),
-                call("codingame/three.py", "rb"),
-                call("codingame/three.py", "r", encoding="utf-8"),
+                call("./codingame.volatile.py", "w"),
+                call("./codingame/three.py", "rb"),
+                call("./codingame/three.py", "r", encoding="utf-8"),
                 call().write("One\n"),
                 call().write("Two\n"),
                 call().write("Three"),
-                call("codingame/two.py", "rb"),
-                call("codingame/two.py", "r", encoding="utf-8"),
+                call("./codingame/two.py", "rb"),
+                call("./codingame/two.py", "r", encoding="utf-8"),
                 call().write(
                     '\n# file "codingame/two.py" ------------------------------------------------------\n'
                 ),
@@ -351,8 +357,8 @@ class FileDoesntExist(unittest.TestCase):
                 call().write(
                     '\n\n\n# end of file "codingame/two.py" ===============================================\n'
                 ),
-                call("codingame/merge_me.py", "rb"),
-                call("codingame/merge_me.py", "r", encoding="utf-8"),
+                call("./codingame/merge_me.py", "rb"),
+                call("./codingame/merge_me.py", "r", encoding="utf-8"),
                 call().write(
                     '\n# file "codingame/merge_me.py" -------------------------------------------------\n'
                 ),
@@ -362,8 +368,8 @@ class FileDoesntExist(unittest.TestCase):
                 call().write(
                     '\n\n\n# end of file "codingame/merge_me.py" ==========================================\n'
                 ),
-                call("codingame/one.py", "rb"),
-                call("codingame/one.py", "r", encoding="utf-8"),
+                call("./codingame/one.py", "rb"),
+                call("./codingame/one.py", "r", encoding="utf-8"),
                 call().write("One\n"),
                 call().write("Two\n"),
                 call().write("Three"),
@@ -403,14 +409,14 @@ class FileDoesntExist(unittest.TestCase):
         self.assertListEqual(
             calls,
             [
-                call("codingame.volatile.py", "w"),
-                call("codingame/three.py", "rb"),
-                call("codingame/three.py", "r", encoding="utf-8"),
+                call("./codingame.volatile.py", "w"),
+                call("./codingame/three.py", "rb"),
+                call("./codingame/three.py", "r", encoding="utf-8"),
                 call().write("One\n"),
                 call().write("Two\n"),
                 call().write("Three"),
-                call("codingame/two.py", "rb"),
-                call("codingame/two.py", "r", encoding="utf-8"),
+                call("./codingame/two.py", "rb"),
+                call("./codingame/two.py", "r", encoding="utf-8"),
                 call().write(
                     '\n# file "codingame/two.py" ------------------------------------------------------\n'
                 ),
@@ -420,8 +426,8 @@ class FileDoesntExist(unittest.TestCase):
                 call().write(
                     '\n\n\n# end of file "codingame/two.py" ===============================================\n'
                 ),
-                call("codingame/one.py", "rb"),
-                call("codingame/one.py", "r", encoding="utf-8"),
+                call("./codingame/one.py", "rb"),
+                call("./codingame/one.py", "r", encoding="utf-8"),
                 call().write("One\n"),
                 call().write("Two\n"),
                 call().write("Three"),
@@ -458,9 +464,9 @@ class FileDoesntExist(unittest.TestCase):
         self.assertListEqual(
             calls,
             [
-                call("codingame.volatile.py", "w"),
-                call("codingame/two.py", "rb"),
-                call("codingame/two.py", "r", encoding="utf-8"),
+                call("./codingame.volatile.py", "w"),
+                call("./codingame/two.py", "rb"),
+                call("./codingame/two.py", "r", encoding="utf-8"),
                 call().write(
                     '\n# file "codingame/two.py" ------------------------------------------------------\n'
                 ),
@@ -506,9 +512,9 @@ class FileDoesntExist(unittest.TestCase):
         self.assertListEqual(
             calls,
             [
-                call("codingame.volatile.cs", "w"),
-                call("codingame/one.cs", "rb"),
-                call("codingame/one.cs", "r", encoding="utf-8"),
+                call("./codingame.volatile.cs", "w"),
+                call("./codingame/one.cs", "rb"),
+                call("./codingame/one.cs", "r", encoding="utf-8"),
                 call().write('\n// file "codingame/one.cs" #############\n'),
                 call().write('\n\n\n// end of file "codingame/one.cs" ******\n'),
             ],
@@ -551,9 +557,9 @@ class FileDoesntExist(unittest.TestCase):
         self.assertListEqual(
             calls,
             [
-                call("codingame.volatile.cs", "w"),
-                call("codingame/one.cs", "rb"),
-                call("codingame/one.cs", "r", encoding="utf-8"),
+                call("./codingame.volatile.cs", "w"),
+                call("./codingame/one.cs", "rb"),
+                call("./codingame/one.cs", "r", encoding="utf-8"),
                 call().write(
                     '\n// file "codingame/one.cs" -----------------------------------------------------\n'
                 ),
@@ -600,9 +606,9 @@ class FileDoesntExist(unittest.TestCase):
         self.assertListEqual(
             calls,
             [
-                call("codingame.volatile.cs", "w"),
-                call("codingame/one.cs", "rb"),
-                call("codingame/one.cs", "r", encoding="utf-8-sig"),
+                call("./codingame.volatile.cs", "w"),
+                call("./codingame/one.cs", "rb"),
+                call("./codingame/one.cs", "r", encoding="utf-8-sig"),
                 call().write(
                     '\n// file "codingame/one.cs" -----------------------------------------------------\n'
                 ),
