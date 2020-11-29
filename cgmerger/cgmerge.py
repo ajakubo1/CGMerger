@@ -17,6 +17,12 @@ parser.add_argument(
     help="Folder that will be searched for files to merge in output file",
 )
 parser.add_argument(
+    "--basedir",
+    type=str,
+    help="Base directory folder used instead of the current folder you are in, "
+    "while running this command",
+)
+parser.add_argument(
     "--order",
     type=str,
     help="Forcing the order of files copied from the workdir (use comma-separated "
@@ -84,14 +90,16 @@ config = None
 
 def check_file_exists(file_path):
     if not os.path.isfile(file_path):
-        parser.error('No "{}" file present in {}'.format(file_path, os.getcwd()))
+        parser.error(
+            'No "{}" file present in {}'.format(file_path, config["merger"]["basedir"])
+        )
 
 
 def check_workdir_exists():
     if not os.path.isdir(config["merger"]["workdir"]):
         parser.error(
             'No "{}" directory present in {}'.format(
-                config["merger"]["workdir"], os.getcwd()
+                config["merger"]["workdir"], config["merger"]["basedir"]
             )
         )
 
@@ -134,6 +142,7 @@ def log_values():
     print("")
     print("output: ", config["merger"].get("output", "none"))
     print("workdir: ", config["merger"].get("workdir", "none"))
+    print("basedir: ", config["merger"].get("basedir", "none"))
     print("order: ", config["merger"].get("order", "none"))
     print("file_regex: ", config["merger"].get("file_regex", "none"))
     print("exclude_line_regex: ", config["merger"].get("exclude_line_regex", "none"))
@@ -169,6 +178,8 @@ def copy_parser_arguments_to_config(arguments: Namespace):
         config["merger"]["separator_length"] = arguments.separator_length
     if arguments.order is not None:
         config["merger"]["order"] = arguments.order
+    if arguments.basedir is not None:
+        config["merger"]["basedir"] = arguments.basedir
 
 
 def get_parameters_from_config():
@@ -224,6 +235,7 @@ def init_config():
         defaults={
             "output": "codingame.volatile.py",
             "workdir": "codingame/",
+            "basedir": "{}".format(os.getcwd()),
             "file_regex": ".*",
             "exclude_line_regex": "^from codingame\.|^import codingame|^from \.|^import \.",
             "comment": "#",
