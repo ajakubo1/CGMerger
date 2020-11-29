@@ -17,6 +17,12 @@ parser.add_argument(
     help="Folder that will be searched for files to merge in output file",
 )
 parser.add_argument(
+    "--basedir",
+    type=str,
+    help="Base directory folder used instead of the current folder you are in, "
+    "while running this command",
+)
+parser.add_argument(
     "--order",
     type=str,
     help="Forcing the order of files copied from the workdir (use comma-separated "
@@ -84,31 +90,36 @@ config = None
 
 def check_file_exists(file_path):
     if not os.path.isfile(file_path):
-        parser.error('No "{}" file present in {}'.format(file_path, os.getcwd()))
+        parser.error(
+            'No "{}" file present in {}'.format(file_path, config["merger"]["basedir"])
+        )
 
 
 def check_workdir_exists():
-    if not os.path.isdir(config["merger"]["workdir"]):
+    if not os.path.isdir(
+        os.path.join(config["merger"]["basedir"], config["merger"]["workdir"])
+    ):
         parser.error(
             'No "{}" directory present in {}'.format(
-                config["merger"]["workdir"], os.getcwd()
+                config["merger"]["workdir"], config["merger"]["basedir"]
             )
         )
 
 
 def write_to_output_file(
+    file_location,
     file_name,
     output_file,
     exclude_line_regex,
     disable_headers=False,
     ignore_regex=False,
 ):
-    bytes = min(32, os.path.getsize(file_name))
-    with open(file_name, "rb") as byte_file:
+    bytes = min(32, os.path.getsize(file_location))
+    with open(file_location, "rb") as byte_file:
         raw = byte_file.read(bytes)
         encoding = chardet.detect(raw)["encoding"]
 
-    with open(file_name, "r", encoding=encoding) as current_file:
+    with open(file_location, "r", encoding=encoding) as current_file:
         if not disable_headers:
             start_file_comment = '{} file "{}" '.format(
                 config["merger"]["comment"], file_name
@@ -134,6 +145,7 @@ def log_values():
     print("")
     print("output: ", config["merger"].get("output", "none"))
     print("workdir: ", config["merger"].get("workdir", "none"))
+    print("basedir: ", config["merger"].get("basedir", "none"))
     print("order: ", config["merger"].get("order", "none"))
     print("file_regex: ", config["merger"].get("file_regex", "none"))
     print("exclude_line_regex: ", config["merger"].get("exclude_line_regex", "none"))
@@ -169,6 +181,8 @@ def copy_parser_arguments_to_config(arguments: Namespace):
         config["merger"]["separator_length"] = arguments.separator_length
     if arguments.order is not None:
         config["merger"]["order"] = arguments.order
+    if arguments.basedir is not None:
+        config["merger"]["basedir"] = arguments.basedir
 
 
 def get_parameters_from_config():
@@ -179,6 +193,7 @@ def get_parameters_from_config():
     exclude_line_regex = re.compile(config["merger"]["exclude_line_regex"])
     header_file = None
     footer_file = None
+    base_dir = config["merger"]["basedir"]
 
     if "header" in config["merger"]:
         header_file = config["merger"]["header"]
@@ -189,21 +204,23 @@ def get_parameters_from_config():
     if "order" in config["merger"]:
         order = config["merger"]["order"].split(",")
 
-    check_file_exists(output_file_location)
+    check_file_exists(os.path.join(base_dir, output_file_location))
     check_workdir_exists()
 
     if order is not None:
         for file_name in order:
-            check_file_exists(os.path.join(work_dir, file_name))
+            check_file_exists(os.path.join(base_dir, work_dir, file_name))
 
     if header_file is not None:
-        check_file_exists(os.path.join(work_dir, header_file))
+        check_file_exists(os.path.join(base_dir, work_dir, header_file))
 
     if footer_file is not None:
-        check_file_exists(os.path.join(work_dir, footer_file))
+        check_file_exists(os.path.join(base_dir, work_dir, footer_file))
 
     files_to_watch = [
-        f for f in os.listdir(work_dir) if os.path.isfile(os.path.join(work_dir, f))
+        f
+        for f in os.listdir(os.path.join(base_dir, work_dir))
+        if os.path.isfile(os.path.join(base_dir, work_dir, f))
     ]
 
     return (
@@ -215,6 +232,7 @@ def get_parameters_from_config():
         header_file,
         footer_file,
         files_to_watch,
+        base_dir,
     )
 
 
@@ -224,6 +242,7 @@ def init_config():
         defaults={
             "output": "codingame.volatile.py",
             "workdir": "codingame/",
+            "basedir": "{}".format(os.getcwd()),
             "file_regex": ".*",
             "exclude_line_regex": "^from codingame\.|^import codingame|^from \.|^import \.",
             "comment": "#",
@@ -239,8 +258,11 @@ def main():
     init_config()
 
     arguments = parser.parse_args()
-    if os.path.exists("cgmerger.conf"):
-        config.read("cgmerger.conf")
+    base_dir = "./"
+    if arguments.basedir is not None:
+        base_dir = arguments.basedir
+    if os.path.exists(os.path.join(base_dir, "cgmerger.conf")):
+        config.read(os.path.join(base_dir, "cgmerger.conf"))
     else:
         print("")
         print(
@@ -272,12 +294,14 @@ def main():
         header_file,
         footer_file,
         files_to_watch,
+        base_dir,
     ) = get_parameters_from_config()
 
-    with open(output_file_location, "w") as output_file:
+    with open(os.path.join(base_dir, output_file_location), "w") as output_file:
         # all of the files, which are not in order
         if header_file is not None:
             write_to_output_file(
+                os.path.join(base_dir, work_dir, header_file),
                 os.path.join(work_dir, header_file),
                 output_file,
                 exclude_line_regex,
@@ -296,7 +320,10 @@ def main():
                     continue
 
                 write_to_output_file(
-                    os.path.join(work_dir, f), output_file, exclude_line_regex
+                    os.path.join(base_dir, work_dir, f),
+                    os.path.join(work_dir, f),
+                    output_file,
+                    exclude_line_regex,
                 )
 
         for f in files_to_watch:
@@ -313,10 +340,14 @@ def main():
                 continue
 
             write_to_output_file(
-                os.path.join(work_dir, f), output_file, exclude_line_regex
+                os.path.join(base_dir, work_dir, f),
+                os.path.join(work_dir, f),
+                output_file,
+                exclude_line_regex,
             )
         if footer_file is not None:
             write_to_output_file(
+                os.path.join(base_dir, work_dir, footer_file),
                 os.path.join(work_dir, footer_file),
                 output_file,
                 exclude_line_regex,
