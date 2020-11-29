@@ -219,7 +219,7 @@ def get_parameters_from_config():
 
     files_to_watch = [
         f
-        for f in os.listdir(work_dir)
+        for f in os.listdir(os.path.join(base_dir, work_dir))
         if os.path.isfile(os.path.join(base_dir, work_dir, f))
     ]
 
@@ -262,7 +262,7 @@ def main():
     if arguments.basedir is not None:
         base_dir = arguments.basedir
     if os.path.exists(os.path.join(base_dir, "cgmerger.conf")):
-        config.read("cgmerger.conf")
+        config.read(os.path.join(base_dir, "cgmerger.conf"))
     else:
         print("")
         print(
