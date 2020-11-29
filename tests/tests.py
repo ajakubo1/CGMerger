@@ -32,6 +32,7 @@ class FileDoesntExist(unittest.TestCase):
         args_mock.exclude_line_regex = None
         args_mock.output = None
         args_mock.workdir = None
+        args_mock.basedir = None
         args_mock.header = None
         args_mock.footer = None
         args_mock.comment = None
@@ -70,6 +71,18 @@ class FileDoesntExist(unittest.TestCase):
         self.get_default_setup(parser)
         with self.assertRaisesRegex(
             TestException, 'No "codingame.volatile.py" file present in '
+        ):
+            main()
+
+    @patch("cgmerger.cgmerge.parser")
+    @patch("cgmerger.cgmerge.os.path.isfile")
+    def test_custom_basedir(self, path_exists, parser):
+        path_exists.return_value = False
+        args_mock, _ = self.get_default_setup(parser)
+        args_mock.basedir = "/one/two/three/"
+        with self.assertRaisesRegex(
+            TestException,
+            'No "codingame.volatile.py" file present in {}'.format(args_mock.basedir),
         ):
             main()
 
