@@ -22,6 +22,7 @@ from those languages and you should be able to use the script:
 
 - ``C#`` sample project: https://github.com/ajakubo1/CGmerger-examples/tree/main/default-csharp
 - ``python`` sample project: https://github.com/ajakubo1/CGmerger-examples/tree/main/default-python
+- ``typescript`` sample project: https://github.com/ajakubo1/CGmerger-examples/tree/main/default-typescript
 
 Please - share your successful setup of the script by opening a PR to https://github.com/ajakubo1/CGmerger-examples/
 
@@ -98,3 +99,7 @@ For re-adjusting the script for different languages, you probably need to re-adj
  ``workdir`` should be copied to ``output`` file. By default, the command will
  copy the contents of all of the files in that folder. You can change it to target
  different file types (e.g. ``.*.cs`` files instead of ``.*.py`` files)
+- ``remove_parts_regex`` (**optional**) - this is regex used when script starts to
+ copy file contents line-by-line to replace some of the unneeded strings. E.g. in 
+ ``.ts`` scripts lines starting with "export" should be reformatted in such a way
+ that we remove that export part. This can be done by setting ``remove_parts_regex`` to ``^export``.
