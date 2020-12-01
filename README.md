@@ -23,6 +23,8 @@ from those languages and you should be able to use the script:
 - ``C#`` sample project: https://github.com/ajakubo1/CGmerger-examples/tree/main/default-csharp
 - ``python`` sample project: https://github.com/ajakubo1/CGmerger-examples/tree/main/default-python
 - ``typescript`` sample project: https://github.com/ajakubo1/CGmerger-examples/tree/main/default-typescript
+- ``javascript`` sample project: https://github.com/ajakubo1/CGmerger-examples/tree/main/default-javascript
+- ``java`` sample project: https://github.com/ajakubo1/CGmerger-examples/tree/main/default-java
 
 Please - share your successful setup of the script by opening a PR to https://github.com/ajakubo1/CGmerger-examples/
 
