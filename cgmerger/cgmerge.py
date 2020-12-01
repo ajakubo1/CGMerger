@@ -76,6 +76,13 @@ parser.add_argument(
     'during the merge ("^from codingame\.|^import codingame|^from \.|^import \." by '
     "default to exclude python local imports)",
 )
+parser.add_argument(
+    "--remove-parts-regex",
+    type=str,
+    help="pythonic regex used to filter-out parts of files that would cause a mess. "
+    "Matched characters in a regex will be removed from the copied line. Example "
+    "of usage - removing 'export' entries in typescript files.",
+)
 parser.add_argument("--debug", action="store_true", help="print current settings")
 parser.add_argument(
     "--write",
@@ -111,9 +118,11 @@ def write_to_output_file(
     file_name,
     output_file,
     exclude_line_regex,
+    remove_parts_regex=None,
     disable_headers=False,
     ignore_regex=False,
 ):
+
     bytes = min(32, os.path.getsize(file_location))
     with open(file_location, "rb") as byte_file:
         raw = byte_file.read(bytes)
@@ -130,6 +139,8 @@ def write_to_output_file(
             output_file.write("\n{}\n".format(start_file_comment))
         for line in current_file.readlines():
             if ignore_regex or not exclude_line_regex.search(line):
+                if remove_parts_regex is not None:
+                    line = remove_parts_regex.sub("", line)
                 output_file.write(line)
         if not disable_headers:
             end_file_comment = '{} end of file "{}" '.format(
@@ -149,6 +160,7 @@ def log_values():
     print("order: ", config["merger"].get("order", "none"))
     print("file_regex: ", config["merger"].get("file_regex", "none"))
     print("exclude_line_regex: ", config["merger"].get("exclude_line_regex", "none"))
+    print("remove_parts_regex: ", config["merger"].get("remove_parts_regex", "none"))
     print("header: ", config["merger"].get("header", "none"))
     print("footer: ", config["merger"].get("footer", "none"))
     print("comment: ", config["merger"].get("comment", "none"))
@@ -163,6 +175,8 @@ def copy_parser_arguments_to_config(arguments: Namespace):
         config["merger"]["file_regex"] = arguments.file_regex
     if arguments.exclude_line_regex is not None:
         config["merger"]["exclude_line_regex"] = arguments.exclude_line_regex
+    if arguments.remove_parts_regex is not None:
+        config["merger"]["remove_parts_regex"] = arguments.remove_parts_regex
     if arguments.output is not None:
         config["merger"]["output"] = arguments.output
     if arguments.workdir is not None:
@@ -194,6 +208,11 @@ def get_parameters_from_config():
     header_file = None
     footer_file = None
     base_dir = config["merger"]["basedir"]
+    remove_parts_regex = (
+        None
+        if "remove_parts_regex" not in config["merger"]
+        else re.compile(config["merger"]["remove_parts_regex"])
+    )
 
     if "header" in config["merger"]:
         header_file = config["merger"]["header"]
@@ -233,6 +252,7 @@ def get_parameters_from_config():
         footer_file,
         files_to_watch,
         base_dir,
+        remove_parts_regex,
     )
 
 
@@ -295,6 +315,7 @@ def main():
         footer_file,
         files_to_watch,
         base_dir,
+        remove_parts_regex,
     ) = get_parameters_from_config()
 
     with open(os.path.join(base_dir, output_file_location), "w") as output_file:
@@ -324,6 +345,7 @@ def main():
                     os.path.join(work_dir, f),
                     output_file,
                     exclude_line_regex,
+                    remove_parts_regex,
                 )
 
         for f in files_to_watch:
@@ -344,6 +366,7 @@ def main():
                 os.path.join(work_dir, f),
                 output_file,
                 exclude_line_regex,
+                remove_parts_regex,
             )
         if footer_file is not None:
             write_to_output_file(
@@ -351,5 +374,6 @@ def main():
                 os.path.join(work_dir, footer_file),
                 output_file,
                 exclude_line_regex,
+                remove_parts_regex,
                 disable_headers=True,
             )
