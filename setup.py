@@ -1,7 +1,12 @@
 from setuptools import setup, find_packages
 import pathlib
+import sys
 
-here = pathlib.Path(__file__).parent.resolve()
+assert sys.version_info >= (3, 5, 0), "CGMerger requires Python 3.5+"
+
+current_dir = pathlib.Path(__file__).parent
+here = current_dir.resolve()
+sys.path.insert(0, str(current_dir))
 
 long_description = (here / "README.md").read_text(encoding="utf-8")
 
