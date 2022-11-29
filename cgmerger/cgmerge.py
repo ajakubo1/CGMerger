@@ -293,13 +293,20 @@ def main():
         config.read(os.path.join(base_dir, "cgmerger.conf"))
     else:
         print("")
+        run_without_conf_file = input(
+            "No cgmerger.conf file found. The script will "
+            "run with default settings. Do you want to proceed? (y/N)?"
+        )
+        print("")
         print(
-            "No cgmerger.conf file found. The script will run with default "
-            "settings. run the command with --write flag to write new cgmerger.conf "
+            "Run the command with --write flag to write new cgmerger.conf "
             "file or override the current one. Run the command with --debug flag to "
             "check the current settings"
         )
         print("")
+
+        if not run_without_conf_file.lower() in ["y", "yes"]:
+            return
 
     copy_parser_arguments_to_config(arguments)
 
