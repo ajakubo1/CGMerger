@@ -582,7 +582,10 @@ class FileDoesntExist(unittest.TestCase):
     def test_replace_part_content(
         self, detect, listdir, getsize, is_dir, path_exists, parser
     ):
-        open = mock_open(Mock(), read_data="export const weee = () => {}",)
+        open = mock_open(
+            Mock(),
+            read_data="export const weee = () => {}",
+        )
         detect.return_value = {"encoding": "utf-8"}
         getsize.return_value = 1
         path_exists.return_value = True
