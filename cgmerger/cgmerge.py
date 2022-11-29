@@ -104,7 +104,7 @@ def check_file_exists(file_path):
 
 def check_or_create(file_path):
     if not os.path.isfile(file_path):
-        print('File {} was not found. Creating it...'.format(file_path, config["merger"]["basedir"]))
+        print('File {} was not found. It will be created...'.format(file_path, config["merger"]["basedir"]))
 
 
 def check_workdir_exists():
