@@ -298,7 +298,9 @@ def main():
         print("")
         print(
             "No cgmerger.conf file found. The script will run with default settings. "
-            "This may cause files to be created in your current directory."
+            "This may cause files to be created in directory: {}.".format(
+                os.path.abspath(base_dir)
+            )
         )
         if not arguments.force:
             run_without_conf_file = input("Do you want to proceed? (y/N)?")
