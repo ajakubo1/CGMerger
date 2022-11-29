@@ -105,7 +105,6 @@ def check_file_exists(file_path):
 def check_or_create(file_path):
     if not os.path.isfile(file_path):
         print('File {} was not found. Creating it...'.format(file_path, config["merger"]["basedir"]))
-        open(file_path, 'a').close()
 
 
 def check_workdir_exists():
@@ -229,7 +228,6 @@ def get_parameters_from_config():
     if "order" in config["merger"]:
         order = config["merger"]["order"].split(",")
 
-    check_or_create(os.path.join(base_dir, output_file_location))
     check_workdir_exists()
 
     if order is not None:
@@ -247,6 +245,8 @@ def get_parameters_from_config():
         for f in os.listdir(os.path.join(base_dir, work_dir))
         if os.path.isfile(os.path.join(base_dir, work_dir, f))
     ]
+
+    check_or_create(os.path.join(base_dir, output_file_location))
 
     return (
         order,
@@ -324,7 +324,7 @@ def main():
         remove_parts_regex,
     ) = get_parameters_from_config()
 
-    with open(os.path.join(base_dir, output_file_location), "w") as output_file:
+    with open(os.path.join(base_dir, output_file_location), "w+") as output_file:
         # all of the files, which are not in order
         if header_file is not None:
             write_to_output_file(
