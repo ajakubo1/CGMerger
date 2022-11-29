@@ -87,7 +87,7 @@ parser.add_argument(
 )
 parser.add_argument("--debug", action="store_true", help="print current settings")
 parser.add_argument(
-    "--force", action="store_false", help="force run (no questions asked)"
+    "--force", help="force run (no questions asked)"
 )
 parser.add_argument(
     "--write",
