@@ -87,7 +87,7 @@ parser.add_argument(
 )
 parser.add_argument("--debug", action="store_true", help="print current settings")
 parser.add_argument(
-    "--force", help="force run (no questions asked)"
+    "--force", action="store_true", help="force run (no questions asked)"
 )
 parser.add_argument(
     "--write",
@@ -313,6 +313,7 @@ def main():
         print("")
 
         if not run_without_conf_file.lower() in ["y", "yes"]:
+            print("CGMerger will not run")
             return
 
     copy_parser_arguments_to_config(arguments)
