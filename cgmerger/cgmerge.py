@@ -104,13 +104,9 @@ def check_file_exists(file_path):
         )
 
 
-def check_or_create(file_path):
+def check_or_create_output_file(file_path):
     if not os.path.isfile(file_path):
-        print(
-            "File {} was not found. It will be created...".format(
-                file_path, config["merger"]["basedir"]
-            )
-        )
+        print("File {} was not found. It will be created...".format(file_path))
 
 
 def check_workdir_exists():
@@ -252,7 +248,7 @@ def get_parameters_from_config():
         if os.path.isfile(os.path.join(base_dir, work_dir, f))
     ]
 
-    check_or_create(os.path.join(base_dir, output_file_location))
+    check_or_create_output_file(os.path.join(base_dir, output_file_location))
 
     return (
         order,
