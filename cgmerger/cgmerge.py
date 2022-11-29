@@ -87,6 +87,9 @@ parser.add_argument(
 )
 parser.add_argument("--debug", action="store_true", help="print current settings")
 parser.add_argument(
+    "--force", action="store_false", help="force run (no questions asked)"
+)
+parser.add_argument(
     "--write",
     action="store_true",
     help="Write current settings in form of a file ("
@@ -293,10 +296,14 @@ def main():
         config.read(os.path.join(base_dir, "cgmerger.conf"))
     else:
         print("")
-        run_without_conf_file = input(
-            "No cgmerger.conf file found. The script will "
-            "run with default settings. Do you want to proceed? (y/N)?"
+        print(
+            "No cgmerger.conf file found. The script will run with default settings. "
+            "This may cause files to be created in your current directory."
         )
+        if not arguments.force:
+            run_without_conf_file = input("Do you want to proceed? (y/N)?")
+        else:
+            run_without_conf_file = "y"
         print("")
         print(
             "Run the command with --write flag to write new cgmerger.conf "

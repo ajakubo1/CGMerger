@@ -43,6 +43,7 @@ class FileDoesntExist(unittest.TestCase):
         args_mock.separator_start = None
         args_mock.separator_end = None
         args_mock.separator_length = None
+        args_mock.force = True
         return args_mock
 
     def get_default_setup(self, parser):
