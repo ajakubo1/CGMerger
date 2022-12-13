@@ -319,8 +319,7 @@ def main():
         print("")
 
         if not run_without_conf_file.lower() in ["y", "yes"]:
-            print("CGMerger will not run")
-            return
+            parser.exit(message="No further operations will be performed")
 
     copy_parser_arguments_to_config(arguments)
 
