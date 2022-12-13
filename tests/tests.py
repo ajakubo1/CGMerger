@@ -19,6 +19,7 @@ def path_exists_wrapper(paths: Dict[str, bool]):
     return real_path_exists
 
 
+@patch("cgmerger.cgmerge.os.path.exists", return_value=True)
 class FileDoesntExist(unittest.TestCase):
     def raise_exception(self, message):
         raise TestException(message)
@@ -43,7 +44,7 @@ class FileDoesntExist(unittest.TestCase):
         args_mock.separator_start = None
         args_mock.separator_end = None
         args_mock.separator_length = None
-        args_mock.force = True
+        args_mock.force = False
         return args_mock
 
     def get_default_setup(self, parser):
@@ -56,7 +57,7 @@ class FileDoesntExist(unittest.TestCase):
 
     @patch("cgmerger.cgmerge.parser")
     @patch("cgmerger.cgmerge.os.path.isfile")
-    def test_debug_printout(self, path_exists, parser):
+    def test_debug_printout(self, path_exists, parser, *args):
         path_exists.return_value = False
         args_mock, _ = self.get_default_setup(parser)
         args_mock.debug = True
@@ -65,46 +66,12 @@ class FileDoesntExist(unittest.TestCase):
             TestExitException, "No further operations will be performed"
         ):
             main()
-
-    @patch("cgmerger.cgmerge.parser")
-    @patch("cgmerger.cgmerge.os.path.isfile")
-    def test_default_output_file_doesnt_exist(self, path_exists, parser):
-        path_exists.return_value = False
-        self.get_default_setup(parser)
-        with self.assertRaisesRegex(
-            TestException, 'No "./codingame.volatile.py" file present in '
-        ):
-            main()
-
-    @patch("cgmerger.cgmerge.parser")
-    @patch("cgmerger.cgmerge.os.path.isfile")
-    def test_custom_basedir(self, path_exists, parser):
-        path_exists.return_value = False
-        args_mock, _ = self.get_default_setup(parser)
-        args_mock.basedir = "/one/two/three/"
-        with self.assertRaisesRegex(
-            TestException,
-            'No "{}codingame.volatile.py" file present in {}'.format(
-                args_mock.basedir, args_mock.basedir
-            ),
-        ):
-            main()
-
-    @patch("cgmerger.cgmerge.parser")
-    @patch("cgmerger.cgmerge.os.path.exists")
-    def test_custom_output_file_doesnt_exist(self, path_exists, parser):
-        path_exists.return_value = False
-        args_mock, _ = self.get_default_setup(parser)
-        args_mock.output = "very_custom_file.py"
-        with self.assertRaisesRegex(
-            TestException, 'No "./{}" file present in '.format(args_mock.output)
-        ):
-            main()
+            
 
     @patch("cgmerger.cgmerge.parser")
     @patch("cgmerger.cgmerge.os.path.isfile")
     @patch("cgmerger.cgmerge.os.path.isdir")
-    def test_default_workdir_doesnt_exist(self, is_dir, path_exists, parser):
+    def test_default_workdir_doesnt_exist(self, is_dir, path_exists, parser, *args):
         path_exists.return_value = True
         is_dir.return_value = False
         self.get_default_setup(parser)
@@ -116,7 +83,7 @@ class FileDoesntExist(unittest.TestCase):
     @patch("cgmerger.cgmerge.parser")
     @patch("cgmerger.cgmerge.os.path.isfile")
     @patch("cgmerger.cgmerge.os.path.isdir")
-    def test_custom_workdir_doesnt_exist(self, is_dir, path_exists, parser):
+    def test_custom_workdir_doesnt_exist(self, is_dir, path_exists, parser, *args):
         path_exists.return_value = True
         is_dir.return_value = False
         args_mock, _ = self.get_default_setup(parser)
@@ -131,7 +98,7 @@ class FileDoesntExist(unittest.TestCase):
     @patch("cgmerger.cgmerge.os.path.isdir")
     @patch("cgmerger.cgmerge.os.listdir")
     @patch("cgmerger.cgmerge.open")
-    def test_create_default_output(self, open, listdir, is_dir, path_exists, parser):
+    def test_create_default_output(self, open, listdir, is_dir, path_exists, parser, *args):
         path_exists.return_value = True
         is_dir.return_value = True
         listdir.return_value = []
@@ -150,7 +117,7 @@ class FileDoesntExist(unittest.TestCase):
     )
     @patch("cgmerger.cgmerge.parser")
     @patch("cgmerger.cgmerge.os.path.isdir")
-    def test_add_header_file_doesnt_exist(self, is_dir, parser):
+    def test_add_header_file_doesnt_exist(self, is_dir, parser, *args):
         is_dir.return_value = True
         args_mock, _ = self.get_default_setup(parser)
         args_mock.header = "quite_interesting_header_file.py"
@@ -168,7 +135,7 @@ class FileDoesntExist(unittest.TestCase):
     @patch("cgmerger.cgmerge.open")
     @patch("cgmerger.cgmerge.chardet.detect")
     def test_add_header_file_exists(
-        self, detect, open, listdir, getsize, is_dir, path_exists, parser
+        self, detect, open, listdir, getsize, is_dir, path_exists, parser, *args
     ):
         detect.return_value = {"encoding": "utf-8"}
         getsize.return_value = 1
@@ -202,7 +169,7 @@ class FileDoesntExist(unittest.TestCase):
     )
     @patch("cgmerger.cgmerge.parser")
     @patch("cgmerger.cgmerge.os.path.isdir")
-    def test_add_footer_file_doesnt_exist(self, is_dir, parser):
+    def test_add_footer_file_doesnt_exist(self, is_dir, parser, *args):
         is_dir.return_value = True
         args_mock, _ = self.get_default_setup(parser)
         args_mock.footer = "quite_interesting_footer_file.py"
@@ -220,7 +187,7 @@ class FileDoesntExist(unittest.TestCase):
     @patch("cgmerger.cgmerge.open")
     @patch("cgmerger.cgmerge.chardet.detect")
     def test_add_footer_file_exists(
-        self, detect, open, listdir, getsize, is_dir, path_exists, parser
+        self, detect, open, listdir, getsize, is_dir, path_exists, parser, *args
     ):
         detect.return_value = {"encoding": "utf-8"}
         getsize.return_value = 1
@@ -249,7 +216,8 @@ class FileDoesntExist(unittest.TestCase):
     @patch("cgmerger.cgmerge.os.path.getsize")
     @patch("cgmerger.cgmerge.os.listdir")
     @patch("cgmerger.cgmerge.chardet.detect")
-    def test_add_file(self, detect, listdir, getsize, is_dir, path_exists, parser):
+    def test_add_file(self, detect, listdir, getsize, is_dir, path_exists, parser,
+                      *args):
         open = mock_open(Mock(), read_data="One\nTwo\nThree")
         detect.return_value = {"encoding": "utf-8"}
         getsize.return_value = 1
@@ -285,7 +253,7 @@ class FileDoesntExist(unittest.TestCase):
     @patch("cgmerger.cgmerge.open")
     @patch("cgmerger.cgmerge.chardet.detect")
     def test_add_header(
-        self, detect, open, listdir, getsize, is_dir, path_exists, parser
+        self, detect, open, listdir, getsize, is_dir, path_exists, parser, *args
     ):
         detect.return_value = {"encoding": "utf-8"}
         getsize.return_value = 1
@@ -317,7 +285,7 @@ class FileDoesntExist(unittest.TestCase):
     @patch("cgmerger.cgmerge.os.listdir")
     @patch("cgmerger.cgmerge.chardet.detect")
     def test_order_footer_header_files(
-        self, detect, listdir, getsize, is_dir, path_exists, parser
+        self, detect, listdir, getsize, is_dir, path_exists, parser, *args
     ):
         open = mock_open(Mock(), read_data="One\nTwo\nThree")
         detect.return_value = {"encoding": "utf-8"}
@@ -387,7 +355,7 @@ class FileDoesntExist(unittest.TestCase):
     @patch("cgmerger.cgmerge.os.listdir")
     @patch("cgmerger.cgmerge.chardet.detect")
     def test_footer_header_files(
-        self, detect, listdir, getsize, is_dir, path_exists, parser
+        self, detect, listdir, getsize, is_dir, path_exists, parser, *args
     ):
         open = mock_open(Mock(), read_data="One\nTwo\nThree")
         detect.return_value = {"encoding": "utf-8"}
@@ -444,7 +412,7 @@ class FileDoesntExist(unittest.TestCase):
     @patch("cgmerger.cgmerge.os.path.getsize")
     @patch("cgmerger.cgmerge.os.listdir")
     @patch("cgmerger.cgmerge.chardet.detect")
-    def test_file_regex(self, detect, listdir, getsize, is_dir, path_exists, parser):
+    def test_file_regex(self, detect, listdir, getsize, is_dir, path_exists, parser, *args):
         open = mock_open(Mock())
         detect.return_value = {"encoding": "utf-8"}
         getsize.return_value = 1
@@ -487,7 +455,7 @@ class FileDoesntExist(unittest.TestCase):
     @patch("cgmerger.cgmerge.os.listdir")
     @patch("cgmerger.cgmerge.chardet.detect")
     def test_comment_change(
-        self, detect, listdir, getsize, is_dir, path_exists, parser
+        self, detect, listdir, getsize, is_dir, path_exists, parser, *args
     ):
         open = mock_open(Mock())
         detect.return_value = {"encoding": "utf-8"}
@@ -531,7 +499,7 @@ class FileDoesntExist(unittest.TestCase):
     @patch("cgmerger.cgmerge.os.listdir")
     @patch("cgmerger.cgmerge.chardet.detect")
     def test_exclude_content(
-        self, detect, listdir, getsize, is_dir, path_exists, parser
+        self, detect, listdir, getsize, is_dir, path_exists, parser, *args
     ):
         open = mock_open(
             Mock(),
@@ -581,7 +549,7 @@ class FileDoesntExist(unittest.TestCase):
     @patch("cgmerger.cgmerge.os.listdir")
     @patch("cgmerger.cgmerge.chardet.detect")
     def test_replace_part_content(
-        self, detect, listdir, getsize, is_dir, path_exists, parser
+        self, detect, listdir, getsize, is_dir, path_exists, parser, *args
     ):
         open = mock_open(
             Mock(),
@@ -630,7 +598,7 @@ class FileDoesntExist(unittest.TestCase):
     @patch("cgmerger.cgmerge.os.path.getsize")
     @patch("cgmerger.cgmerge.os.listdir")
     @patch("cgmerger.cgmerge.chardet.detect")
-    def test_bug_3_not_utf(self, detect, listdir, getsize, is_dir, path_exists, parser):
+    def test_bug_3_not_utf(self, detect, listdir, getsize, is_dir, path_exists, parser, *args):
         open = mock_open(
             Mock(),
             read_data=b"\xef\xbb\xbfusing System;\nstatic void Main(string[] "
