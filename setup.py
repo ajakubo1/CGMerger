@@ -36,8 +36,15 @@ setup(
     packages=find_packages(exclude=["tests*"]),
     python_requires=">=3.5, <4",
     install_requires=["chardet>=3.0.4,<4.0.0"],
-    extras_require={"dev": ["check-manifest"], "test": ["coverage"],},
-    entry_points={"console_scripts": ["cgmerger=cgmerger.cgmerge:main",],},
+    extras_require={
+        "dev": ["check-manifest"],
+        "test": ["coverage"],
+    },
+    entry_points={
+        "console_scripts": [
+            "cgmerger=cgmerger.cgmerge:main",
+        ],
+    },
     project_urls={
         "Bug Reports": "https://github.com/ajakubo1/CGMerger/issues",
         "Source": "https://github.com/ajakubo1/CGMerger/",

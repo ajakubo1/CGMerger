@@ -40,7 +40,9 @@ parser.add_argument(
     help="File from which the bottom part of output file will be copied",
 )
 parser.add_argument(
-    "--comment", type=str, help='Comment character ("#" by default)',
+    "--comment",
+    type=str,
+    help='Comment character ("#" by default)',
 )
 parser.add_argument(
     "--separator-start",
@@ -85,6 +87,9 @@ parser.add_argument(
 )
 parser.add_argument("--debug", action="store_true", help="print current settings")
 parser.add_argument(
+    "--force", action="store_true", help="force run (no questions asked)"
+)
+parser.add_argument(
     "--write",
     action="store_true",
     help="Write current settings in form of a file ("
@@ -95,6 +100,10 @@ parser.add_argument(
 config = None
 
 
+def get_input(text):
+    return input(text)
+
+
 def check_file_exists(file_path):
     if not os.path.isfile(file_path):
         parser.error(
@@ -102,10 +111,9 @@ def check_file_exists(file_path):
         )
 
 
-def check_or_create(file_path):
+def check_or_create_output_file(file_path):
     if not os.path.isfile(file_path):
-        print('File {} was not found. Creating it...'.format(file_path, config["merger"]["basedir"]))
-        open(file_path, 'a').close()
+        print("File {} was not found. It will be created...".format(file_path))
 
 
 def check_workdir_exists():
@@ -229,7 +237,6 @@ def get_parameters_from_config():
     if "order" in config["merger"]:
         order = config["merger"]["order"].split(",")
 
-    check_or_create(os.path.join(base_dir, output_file_location))
     check_workdir_exists()
 
     if order is not None:
@@ -247,6 +254,8 @@ def get_parameters_from_config():
         for f in os.listdir(os.path.join(base_dir, work_dir))
         if os.path.isfile(os.path.join(base_dir, work_dir, f))
     ]
+
+    check_or_create_output_file(os.path.join(base_dir, output_file_location))
 
     return (
         order,
@@ -292,12 +301,25 @@ def main():
     else:
         print("")
         print(
-            "No cgmerger.conf file found. The script will run with default "
-            "settings. run the command with --write flag to write new cgmerger.conf "
+            "No cgmerger.conf file found. The script will run with default settings. "
+            "This may cause files to be created in directory: {}.".format(
+                os.path.abspath(base_dir)
+            )
+        )
+        if not arguments.force:
+            run_without_conf_file = get_input("Do you want to proceed? (y/N)?")
+        else:
+            run_without_conf_file = "y"
+        print("")
+        print(
+            "Run the command with --write flag to write new cgmerger.conf "
             "file or override the current one. Run the command with --debug flag to "
             "check the current settings"
         )
         print("")
+
+        if not run_without_conf_file.lower() in ["y", "yes"]:
+            parser.exit(message="No further operations will be performed")
 
     copy_parser_arguments_to_config(arguments)
 
@@ -324,7 +346,7 @@ def main():
         remove_parts_regex,
     ) = get_parameters_from_config()
 
-    with open(os.path.join(base_dir, output_file_location), "w") as output_file:
+    with open(os.path.join(base_dir, output_file_location), "w+") as output_file:
         # all of the files, which are not in order
         if header_file is not None:
             write_to_output_file(
