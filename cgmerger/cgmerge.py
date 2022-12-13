@@ -100,6 +100,10 @@ parser.add_argument(
 config = None
 
 
+def get_input(text):
+    return input(text)
+
+
 def check_file_exists(file_path):
     if not os.path.isfile(file_path):
         parser.error(
@@ -303,7 +307,7 @@ def main():
             )
         )
         if not arguments.force:
-            run_without_conf_file = input("Do you want to proceed? (y/N)?")
+            run_without_conf_file = get_input("Do you want to proceed? (y/N)?")
         else:
             run_without_conf_file = "y"
         print("")
