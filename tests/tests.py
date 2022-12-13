@@ -19,8 +19,7 @@ def path_exists_wrapper(paths: Dict[str, bool]):
     return real_path_exists
 
 
-@patch("cgmerger.cgmerge.os.path.exists", return_value=True)
-class FileDoesntExist(unittest.TestCase):
+class BaseTestClass(unittest.TestCase):
     def raise_exception(self, message):
         raise TestException(message)
 
@@ -55,6 +54,9 @@ class FileDoesntExist(unittest.TestCase):
 
         return args_mock, parser
 
+
+@patch("cgmerger.cgmerge.os.path.exists", return_value=True)
+class CGmergerFilePresentTests(BaseTestClass):
     @patch("cgmerger.cgmerge.parser")
     @patch("cgmerger.cgmerge.os.path.isfile")
     def test_debug_printout(self, path_exists, parser, *args):
@@ -66,7 +68,6 @@ class FileDoesntExist(unittest.TestCase):
             TestExitException, "No further operations will be performed"
         ):
             main()
-            
 
     @patch("cgmerger.cgmerge.parser")
     @patch("cgmerger.cgmerge.os.path.isfile")
@@ -98,7 +99,9 @@ class FileDoesntExist(unittest.TestCase):
     @patch("cgmerger.cgmerge.os.path.isdir")
     @patch("cgmerger.cgmerge.os.listdir")
     @patch("cgmerger.cgmerge.open")
-    def test_create_default_output(self, open, listdir, is_dir, path_exists, parser, *args):
+    def test_create_default_output(
+        self, open, listdir, is_dir, path_exists, parser, *args
+    ):
         path_exists.return_value = True
         is_dir.return_value = True
         listdir.return_value = []
@@ -216,8 +219,9 @@ class FileDoesntExist(unittest.TestCase):
     @patch("cgmerger.cgmerge.os.path.getsize")
     @patch("cgmerger.cgmerge.os.listdir")
     @patch("cgmerger.cgmerge.chardet.detect")
-    def test_add_file(self, detect, listdir, getsize, is_dir, path_exists, parser,
-                      *args):
+    def test_add_file(
+        self, detect, listdir, getsize, is_dir, path_exists, parser, *args
+    ):
         open = mock_open(Mock(), read_data="One\nTwo\nThree")
         detect.return_value = {"encoding": "utf-8"}
         getsize.return_value = 1
@@ -412,7 +416,9 @@ class FileDoesntExist(unittest.TestCase):
     @patch("cgmerger.cgmerge.os.path.getsize")
     @patch("cgmerger.cgmerge.os.listdir")
     @patch("cgmerger.cgmerge.chardet.detect")
-    def test_file_regex(self, detect, listdir, getsize, is_dir, path_exists, parser, *args):
+    def test_file_regex(
+        self, detect, listdir, getsize, is_dir, path_exists, parser, *args
+    ):
         open = mock_open(Mock())
         detect.return_value = {"encoding": "utf-8"}
         getsize.return_value = 1
@@ -598,7 +604,9 @@ class FileDoesntExist(unittest.TestCase):
     @patch("cgmerger.cgmerge.os.path.getsize")
     @patch("cgmerger.cgmerge.os.listdir")
     @patch("cgmerger.cgmerge.chardet.detect")
-    def test_bug_3_not_utf(self, detect, listdir, getsize, is_dir, path_exists, parser, *args):
+    def test_bug_3_not_utf(
+        self, detect, listdir, getsize, is_dir, path_exists, parser, *args
+    ):
         open = mock_open(
             Mock(),
             read_data=b"\xef\xbb\xbfusing System;\nstatic void Main(string[] "
@@ -640,3 +648,32 @@ class FileDoesntExist(unittest.TestCase):
                 ),
             ],
         )
+
+
+class CGMergerFileMissingTests(BaseTestClass):
+    @patch("cgmerger.cgmerge.get_input", return_value="nope")
+    @patch("cgmerger.cgmerge.parser")
+    def test_input_required(self, parser, *args):
+        self.get_default_setup(parser)
+        with self.assertRaisesRegex(
+            TestExitException, "No further operations will be performed"
+        ):
+            main()
+
+    @patch("cgmerger.cgmerge.get_input", return_value="yes")
+    @patch("cgmerger.cgmerge.parser")
+    def test_input_agree_to_run(self, parser, *args):
+        self.get_default_setup(parser)
+        with self.assertRaisesRegex(
+            TestException, 'No "codingame/" directory present in ./'
+        ):
+            main()
+
+    @patch("cgmerger.cgmerge.parser")
+    def test_force_file_creation(self, parser, *args):
+        args_mock, _ = self.get_default_setup(parser)
+        args_mock.force = True
+        with self.assertRaisesRegex(
+            TestException, 'No "codingame/" directory present in ./'
+        ):
+            main()
